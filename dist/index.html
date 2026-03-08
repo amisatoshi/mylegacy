@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a6b62">
+    <meta name="description" content="Private, encrypted Islamic will creation and Faraid inheritance calculator">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="My Legacy">
+    <title>My Legacy — Islamic Estate Planner</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Apple touch icon (use your logo) -->
+    <link rel="apple-touch-icon" href="mylegacylogo.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- React + Recharts (no Babel needed — app.js is pre-compiled) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { margin: 0; font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; background: #f7f4f0; }
+        .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 1rem; color: #1a6b62; background: #f7f4f0; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { width: 32px; height: 32px; border: 3px solid #e8e0d8; border-top-color: #1a6b62; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        input, textarea, select { width: 100%; padding: 0.8rem 1rem; border-radius: 0.875rem; border: 1.5px solid #e8e0d8; font-size: 0.9rem; font-family: 'Nunito', sans-serif; font-weight: 500; background: #fff; transition: border-color 0.2s, box-shadow 0.2s; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #1a6b62; box-shadow: 0 0 0 3px rgba(26,107,98,0.12); }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.01em; }
+        canvas { border: 2px dashed #d6cfc5; border-radius: 0.875rem; touch-action: none; display: block; background: #fdfcfb; }
+        @media print { @page { margin: 2cm; size: A4; } .print-hidden { display: none !important; } body { background: white !important; } .print-page { page-break-after: always; } h1, h2 { color: #000 !important; } }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="font-weight: 700; font-size: 1rem; color: #1a6b62;">Loading My Legacy...</p>
+        </div>
+    </div>
+
+    <!-- Pre-compiled app — no Babel, no JSX transformation at runtime -->
+    <script src="app.js"></script>
+
+    <!-- PWA Service Worker registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => {
+                        console.log('[SW] Registered:', reg.scope);
+                        // Check for updates every 60 seconds when app is open
+                        setInterval(() => reg.update(), 60000);
+                        // When a new SW is waiting, notify and reload
+                        reg.addEventListener('updatefound', () => {
+                            const newSW = reg.installing;
+                            newSW.addEventListener('statechange', () => {
+                                if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available — show update banner
+                                    if (window.__mlShowUpdate) window.__mlShowUpdate();
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

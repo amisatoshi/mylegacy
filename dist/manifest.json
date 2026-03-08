@@ -1,0 +1,26 @@
+{
+  "name": "My Legacy — Islamic Estate Planner",
+  "short_name": "My Legacy",
+  "description": "Private, encrypted Islamic will creation and Faraid inheritance calculator",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f4f0",
+  "theme_color": "#1a6b62",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "lifestyle", "utilities"],
+  "lang": "en-GB"
+}

@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Legacy - Islamic Estate Planner</title>
+    
+    <script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=bG7cgYWWsc2A33tUoSA6IwBwug5NqjWRCO_OR07SGAHYt2TTs5Qzf0ZUFi3sGQQ-TzZfKGz_1ZpMGO9JfWpHYRr6y9DCsg2x__lasK4xt7rUPHM3hLsHJ2Uv_zWf-GmdXBFaeIVu-ijjgoWeM6vJ5A" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9zcnYxMzUxLWZpbGVzLmhzdGdyLmlvL2Y1ZDA0NDEzNDE5YmUzZWEvYXBpL3Jhdy9wdWJsaWNfaHRtbC9pbmRleC5odG1sPw"/><script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+        .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 1rem; color: #0d9488; background: #f5f5f7; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { width: 32px; height: 32px; border: 4px solid #e5e7eb; border-top-color: #0d9488; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        input, textarea, select { width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e5e5ea; font-size: 0.875rem; font-family: inherit; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #0d9488; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; }
+        canvas { border: 2px dashed #d1d5db; border-radius: 0.5rem; touch-action: none; display: block; background: white; }
+        @media print { @page { margin: 2cm; size: A4; } .print-hidden { display: none !important; } body { background: white !important; } .print-page { page-break-after: always; } h1, h2 { color: #000 !important; } }
+    </style>
+</head>
+<body>
+    <div id="root"><div class="loading"><div class="spinner"></div><p style="font-weight: 600; font-size: 1rem;">Loading My Legacy...</p></div></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // LOGO PATH - Change this to match your uploaded logo filename
+        const LOGO_PATH = "mylegacylogo.png";  // ← EDIT THIS LINE with your logo filename
+        
+        const CURRENCIES = { 
+            'GBP': { symbol: '£', name: 'British Pound', flag: '🇬🇧', enabled: true },
+            'USD': { symbol: '$', name: 'US Dollar (Coming Soon)', flag: '🇺🇸', enabled: false }, 
+            'EUR': { symbol: '€', name: 'Euro (Coming Soon)', flag: '🇪🇺', enabled: false }, 
+            'SAR': { symbol: 'SR', name: 'Saudi Riyal (Coming Soon)', flag: '🇸🇦', enabled: false }, 
+            'AED': { symbol: 'AED', name: 'UAE Dirham (Coming Soon)', flag: '🇦🇪', enabled: false } 
+        };
+        const MADHABS = [{ value: 'hanafi', name: 'Hanafi', description: 'Most widespread' }, { value: 'maliki', name: 'Maliki', description: 'North Africa' }, { value: 'shafii', name: "Shafi'i", description: 'Southeast Asia' }, { value: 'hanbali', name: 'Hanbali', description: 'Arabian Peninsula' }];
+        const JURISDICTIONS = [
+            { value: 'england-wales', name: 'England & Wales', country: '🇬🇧', enabled: true }, 
+            { value: 'scotland', name: 'Scotland (Coming Soon)', country: '🇬🇧', enabled: false }, 
+            { value: 'usa', name: 'United States (Coming Soon)', country: '🇺🇸', enabled: false }, 
+            { value: 'canada', name: 'Canada (Coming Soon)', country: '🇨🇦', enabled: false }, 
+            { value: 'australia', name: 'Australia (Coming Soon)', country: '🇦🇺', enabled: false }
+        ];
+        const MARITAL_STATUS = [{ value: '', label: 'Select...' }, { value: 'single', label: 'Single' }, { value: 'married', label: 'Married' }, { value: 'divorced', label: 'Divorced' }, { value: 'widowed', label: 'Widowed' }];
+        const BURIAL_PREFS = [{ value: 'muslim-cemetery', label: 'Muslim Cemetery' }, { value: 'islamic-section', label: 'Islamic Section of Cemetery' }, { value: 'family-plot', label: 'Family Plot' }, { value: 'specific', label: 'Specific Location' }];
+        const RELATIONSHIPS = [{ value: 'self', label: 'Self' }, { value: 'spouse', label: 'Spouse' }, { value: 'child', label: 'Child' }, { value: 'mother', label: 'Mother' }, { value: 'father', label: 'Father' }, { value: 'sibling', label: 'Sibling' }, { value: 'other', label: 'Other Family' }];
+        
+
+        // ── CRYPTO UTILITIES (Web Crypto API — no external libraries) ─────────────
+        const ML_SALT_KEY  = 'ml_salt';
+        const ML_DATA_KEY  = 'ml_enc';
+        const ML_READY_KEY = 'ml_ready';
+
+        const buf2b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+        const b642buf = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+
+        async function deriveCryptoKey(password, salt) {
+            const km = await crypto.subtle.importKey(
+                'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+                km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptBlob(key, obj) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const ct = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv }, key,
+                new TextEncoder().encode(JSON.stringify(obj))
+            );
+            return { iv: buf2b64(iv.buffer), ct: buf2b64(ct) };
+        }
+
+        async function decryptBlob(key, enc) {
+            const pt = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: b642buf(enc.iv) }, key, b642buf(enc.ct)
+            );
+            return JSON.parse(new TextDecoder().decode(pt));
+        }
+
+        async function saveEncrypted(key, data) {
+            const enc = await encryptBlob(key, data);
+            localStorage.setItem(ML_DATA_KEY, JSON.stringify(enc));
+        }
+
+        const EMPTY_DATA = {
+            profiles: [],
+            settings: { madhab: 'hanafi', currency: 'GBP', jurisdiction: 'england-wales' },
+            darkMode: false, willsData: {}, calcData: {}
+        };
+
+        // ── PIN GATE COMPONENT ────────────────────────────────────────────────────
+        function PinGate({ onAuth }) {
+            const [phase, setPhase] = useState('loading');
+            const [pin, setPin]     = useState('');
+            const [conf, setConf]   = useState('');
+            const [error, setError] = useState('');
+            const [busy, setBusy]   = useState(false);
+            const [showReset, setShowReset] = useState(false);
+            const pinRef = useRef(null);
+
+            useEffect(() => {
+                const isReady = localStorage.getItem(ML_READY_KEY);
+                setPhase(isReady ? 'login' : 'setup');
+                setTimeout(() => pinRef.current && pinRef.current.focus(), 150);
+            }, []);
+
+            const doSetup = async () => {
+                if (pin.length < 4) return setError('Password must be at least 4 characters');
+                if (pin !== conf)    return setError('Passwords do not match');
+                setBusy(true); setError('');
+                try {
+                    const salt = crypto.getRandomValues(new Uint8Array(16));
+                    localStorage.setItem(ML_SALT_KEY, buf2b64(salt.buffer));
+                    const key = await deriveCryptoKey(pin, salt);
+                    await saveEncrypted(key, EMPTY_DATA);
+                    localStorage.setItem(ML_READY_KEY, '1');
+                    onAuth(key, EMPTY_DATA);
+                } catch(e) { setError('Setup failed. Please try again.'); setBusy(false); }
+            };
+
+            const doLogin = async () => {
+                if (!pin) return setError('Please enter your password');
+                setBusy(true); setError('');
+                try {
+                    const salt = b642buf(localStorage.getItem(ML_SALT_KEY));
+                    const key  = await deriveCryptoKey(pin, salt);
+                    const enc  = JSON.parse(localStorage.getItem(ML_DATA_KEY));
+                    const data = await decryptBlob(key, enc);
+                    onAuth(key, { ...EMPTY_DATA, ...data });
+                } catch(e) { setError('Incorrect password. Please try again.'); setBusy(false); setPin(''); }
+            };
+
+            const doReset = () => {
+                if (!confirm('⚠️ This will PERMANENTLY DELETE all your My Legacy data. This cannot be undone.\n\nAre you absolutely sure?')) return;
+                if (!confirm('Last chance — delete everything and start over?')) return;
+                localStorage.clear();
+                window.location.reload();
+            };
+
+            const onKey = e => { if (e.key === 'Enter') phase === 'setup' ? doSetup() : doLogin(); };
+
+            const card = { background: 'white', borderRadius: '1.5rem', padding: '2.5rem 2rem', width: '100%', maxWidth: '380px', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' };
+            const inp  = (extra) => ({ width: '100%', padding: '0.875rem 1rem', border: '2px solid ' + (error ? '#ff3b30' : '#d1d5db'), borderRadius: '0.75rem', fontSize: '1rem', boxSizing: 'border-box', outline: 'none', ...extra });
+            const btn  = (bg, disabled) => ({ width: '100%', padding: '0.875rem', background: disabled ? '#9ca3af' : bg, color: 'white', border: 'none', borderRadius: '0.75rem', fontSize: '1rem', fontWeight: 700, cursor: disabled ? 'not-allowed' : 'pointer', marginBottom: '0.75rem', transition: 'opacity 0.2s' });
+
+            if (phase === 'loading') return (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0d9488' }}>
+                    <div style={{ color: 'white', fontSize: '1.25rem', fontWeight: 600 }}>⏳ Loading...</div>
+                </div>
+            );
+
+            return (
+                <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 50%, #134e4a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={card}>
+                        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                            <div style={{ fontSize: '1.3rem', color: '#0d9488', fontFamily: 'Georgia, serif', marginBottom: '0.5rem' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                            <img src={LOGO_PATH} alt="My Legacy" style={{ width: '180px', maxWidth: '80%', marginBottom: '0.5rem', display: 'block', margin: '0 auto 0.5rem' }} />
+                            <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: 0 }}>Islamic Estate Planner</p>
+                        </div>
+
+                        <h2 style={{ color: '#1f2937', fontSize: '1.05rem', fontWeight: 700, textAlign: 'center', marginBottom: '0.5rem' }}>
+                            {phase === 'setup' ? '🔐 Create Your Password' : '🔒 Welcome Back'}
+                        </h2>
+                        <p style={{ color: '#6b7280', fontSize: '0.8rem', textAlign: 'center', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+                            {phase === 'setup'
+                                ? 'Your data is encrypted with your password. Choose carefully — forgotten passwords cannot be recovered.'
+                                : 'Enter your password to decrypt and access your estate planning data.'}
+                        </p>
+
+                        <div style={{ marginBottom: '0.875rem' }}>
+                            <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', color: '#374151', marginBottom: '0.4rem' }}>
+                                {phase === 'setup' ? 'Create Password' : 'Password'}
+                            </label>
+                            <input ref={pinRef} type='password' value={pin} onChange={e => setPin(e.target.value)} onKeyDown={onKey}
+                                placeholder={phase === 'setup' ? 'Minimum 4 characters' : 'Enter your password'}
+                                style={inp()} autoComplete={phase === 'setup' ? 'new-password' : 'current-password'} />
+                        </div>
+
+                        {phase === 'setup' && (
+                            <div style={{ marginBottom: '0.875rem' }}>
+                                <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', color: '#374151', marginBottom: '0.4rem' }}>Confirm Password</label>
+                                <input type='password' value={conf} onChange={e => setConf(e.target.value)} onKeyDown={onKey}
+                                    placeholder='Repeat password' style={inp()} autoComplete='new-password' />
+                            </div>
+                        )}
+
+                        {error && (
+                            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '0.5rem', padding: '0.6rem 0.875rem', marginBottom: '0.875rem' }}>
+                                <p style={{ color: '#dc2626', fontSize: '0.85rem', margin: 0 }}>⚠️ {error}</p>
+                            </div>
+                        )}
+
+                        <button onClick={phase === 'setup' ? doSetup : doLogin} disabled={busy} style={btn('linear-gradient(135deg, #0d9488, #0f766e)', busy)}>
+                            {busy ? '⏳ Processing…' : (phase === 'setup' ? '🔐 Create Password & Start' : '🔓 Unlock My Legacy')}
+                        </button>
+
+                        {phase === 'setup' && (
+                            <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '0.75rem', padding: '0.875rem', fontSize: '0.8rem', color: '#92400e', lineHeight: 1.6 }}>
+                                ⚠️ <strong>Important:</strong> Your data will be encrypted with AES-256. If you forget your password, your data <strong>cannot be recovered</strong>. Please store it safely.
+                            </div>
+                        )}
+
+                        {phase === 'login' && (
+                            <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+                                {!showReset ? (
+                                    <button onClick={() => setShowReset(true)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                                        Forgot password?
+                                    </button>
+                                ) : (
+                                    <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '0.75rem', padding: '0.875rem', marginTop: '0.5rem' }}>
+                                        <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
+                                            ⚠️ <strong>No password recovery is possible.</strong> Resetting will delete all your data permanently.
+                                        </p>
+                                        <button onClick={doReset} style={{ background: '#dc2626', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', marginRight: '0.5rem' }}>Delete Everything</button>
+                                        <button onClick={() => setShowReset(false)} style={{ background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ── APP WRAPPER ───────────────────────────────────────────────────────────
+        function App() {
+            const [session, setSession] = useState(null);
+            if (!session) return <PinGate onAuth={(key, data) => setSession({ key, data })} />;
+            return <MyLegacy
+                cryptoKey={session.key}
+                initialData={session.data}
+                onNewKey={newKey => setSession(prev => ({ ...prev, key: newKey }))}
+            />;
+        }
+
+
+        const FormField = ({ label, value, onChange, type = 'text', required, options, placeholder, helpText, t }) => {
+            const c = t || { text: '#1d1d1f', textSec: '#86868b', surface: '#fff', border: '#e5e5ea' };
+            return (
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ color: c.text }}>{label} {required && <span style={{ color: '#ff3b30' }}>*</span>}</label>
+                    {helpText && <p style={{ color: c.textSec, fontSize: '0.75rem', marginBottom: '0.5rem' }}>{helpText}</p>}
+                    {type === 'select' ? (
+                        <select value={value} onChange={onChange} style={{ background: c.surface, color: c.text, borderColor: c.border }}>
+                            {options && options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                    ) : type === 'textarea' ? (
+                        <textarea value={value} onChange={onChange} rows={4} placeholder={placeholder} style={{ background: c.surface, color: c.text, borderColor: c.border }} />
+                    ) : (
+                        <input type={type} value={value} onChange={onChange} placeholder={placeholder} style={{ background: c.surface, color: c.text, borderColor: c.border }} />
+                    )}
+                </div>
+            );
+        };
+
+        function WillCreator({ willData, setWillData, willStep, setWillStep, selectedProfile, theme, settings, saveWillForProfile }) {
+            const _t = { text: theme.text, textSec: theme.textSec, surface: theme.surface, border: theme.border };
+            useEffect(() => { if (selectedProfile && saveWillForProfile) saveWillForProfile(selectedProfile.id, willData); }, [JSON.stringify(willData)]);
+                const canvasRef = useRef(null);
+                const [isDrawing, setIsDrawing] = useState(false);
+                const [currentSig, setCurrentSig] = useState(null);
+                
+                const getCoordinates = (e) => {
+                    const canvas = canvasRef.current;
+                    if (!canvas) return { x: 0, y: 0 };
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    if (e.touches && e.touches.length > 0) {
+                        return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+                    }
+                    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+                };
+                
+                const startDraw = (e) => {
+                    e.preventDefault();
+                    setIsDrawing(true);
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    const coords = getCoordinates(e);
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = '#000';
+                    ctx.beginPath();
+                    ctx.moveTo(coords.x, coords.y);
+                };
+                
+                const draw = (e) => {
+                    e.preventDefault();
+                    if (!isDrawing) return;
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    const coords = getCoordinates(e);
+                    ctx.lineTo(coords.x, coords.y);
+                    ctx.stroke();
+                };
+                
+                const endDraw = (e) => { e.preventDefault(); setIsDrawing(false); };
+                const clearSig = () => { const canvas = canvasRef.current; const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); };
+                const saveSig = () => {
+                    const sig = canvasRef.current.toDataURL();
+                    setWillData(prev => {
+                        const newSigs = JSON.parse(JSON.stringify(prev.signatures));
+                        if (currentSig === 'testator') newSigs.testator = sig;
+                        else if (currentSig === 'witness1') newSigs.witness1.sig = sig;
+                        else if (currentSig === 'witness2') newSigs.witness2.sig = sig;
+                        return {...prev, signatures: newSigs};
+                    });
+                    setCurrentSig(null);
+                };
+                
+                const printWill = () => {
+                    const today = new Date().toLocaleDateString('en-GB');
+                    const w = window.open('', '_blank');
+                    w.document.write(`
+                        <html>
+                        <head>
+                            <title>Islamic Will - ${willData.personal.fullName}</title>
+                            <style>
+                                body { font-family: 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; color: #000; }
+                                h1 { text-align: center; font-size: 24px; margin-bottom: 10px; border-bottom: 3px solid #0d9488; padding-bottom: 10px; }
+                                h2 { color: #0d9488; font-size: 18px; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #0d9488; padding-bottom: 5px; }
+                                h3 { color: #000; font-size: 14px; margin-top: 20px; margin-bottom: 10px; }
+                                p { margin: 8px 0; font-size: 12px; }
+                                .declaration { background: #f0fdf4; padding: 15px; border-left: 4px solid #0d9488; margin: 20px 0; font-style: italic; }
+                                .sig-box { border: 2px solid #000; padding: 15px; margin: 20px 0; min-height: 120px; page-break-inside: avoid; }
+                                .sig-box img { max-width: 250px; max-height: 100px; display: block; margin: 10px 0; }
+                                .sig-line { border-bottom: 1px solid #000; display: inline-block; min-width: 200px; margin-left: 10px; }
+                                .section { margin-bottom: 25px; page-break-inside: avoid; }
+                                .list-item { margin-left: 20px; margin-bottom: 8px; }
+                                .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #000; text-align: center; font-size: 10px; color: #666; }
+                                .page-break { page-break-after: always; }
+                                @media print { body { padding: 20px; } }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>LAST WILL AND TESTAMENT</h1>
+                            <p style="text-align: center; font-style: italic; margin-bottom: 30px;">In the Name of Allah, the Most Gracious, the Most Merciful</p>
+                            
+                            <div class="section">
+                                <h2>REVOCATION OF PREVIOUS WILLS</h2>
+                                <p>I, <strong>${willData.personal.fullName}</strong>, hereby revoke all former Wills, Codicils and testamentary dispositions made by me and declare this to be my Last Will and Testament.</p>
+                            </div>
+
+                            <div class="section">
+                                <h2>PERSONAL DETAILS</h2>
+                                <p><strong>Full Name:</strong> ${willData.personal.fullName}</p>
+                                <p><strong>Date of Birth:</strong> ${willData.personal.dob}</p>
+                                <p><strong>Address:</strong> ${willData.personal.address}, ${willData.personal.postcode}</p>
+                                ${willData.personal.nationalId ? `<p><strong>National ID/Passport:</strong> ${willData.personal.nationalId}</p>` : ''}
+                                <p><strong>Marital Status:</strong> ${willData.personal.maritalStatus}</p>
+                            </div>
+
+                            <div class="section">
+                                <h2>DECLARATION OF FAITH (SHAHADA)</h2>
+                                <div class="declaration">
+                                    <p>${willData.islamic.shahada}</p>
+                                    <p>أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ ٱللَّٰهِ</p>
+                                </div>
+                            </div>
+
+                            <div class="section">
+                                <h2>ISLAMIC COMPLIANCE DECLARATION</h2>
+                                <p>I declare that I am of sound mind and make this Will in full accordance with Islamic law (Shariah) and the principles of the <strong>${MADHABS.find(m => m.value === settings.madhab)?.name} madhab</strong>.</p>
+                                <p>I request and direct that my estate be distributed according to the Islamic law of inheritance (Faraid) after:</p>
+                                <div class="list-item">1. Payment of my funeral expenses</div>
+                                <div class="list-item">2. Settlement of all lawful debts</div>
+                                <div class="list-item">3. Distribution of any lawful bequests (Wasiyyah) not exceeding one-third of my estate</div>
+                                <div class="list-item">4. Any Waqf (charitable endowment) as specified below</div>
+                            </div>
+
+                            ${Object.values(willData.islamic.obligations).some(v => v) ? `
+                            <div class="section">
+                                <h2>OUTSTANDING ISLAMIC OBLIGATIONS</h2>
+                                ${willData.islamic.obligations.hajj ? `<p><strong>Hajj:</strong> ${willData.islamic.obligations.hajjDetails || 'To be performed on my behalf'}</p>` : ''}
+                                ${willData.islamic.obligations.zakah ? `<p><strong>Zakah:</strong> ${willData.islamic.obligations.zakahDetails || 'To be calculated and paid from my estate'}</p>` : ''}
+                                ${willData.islamic.obligations.qard ? `<p><strong>Qard (Debts):</strong> ${willData.islamic.obligations.qardDetails}</p>` : ''}
+                                ${willData.islamic.obligations.kaffarah ? `<p><strong>Kaffarah (Expiations):</strong> ${willData.islamic.obligations.kaffarahDetails}</p>` : ''}
+                                ${willData.islamic.obligations.other ? `<p><strong>Other Obligations:</strong> ${willData.islamic.obligations.other}</p>` : ''}
+                                <p><em>I direct my executors to ensure these obligations are fulfilled from my estate before distribution.</em></p>
+                            </div>
+                            ` : ''}
+
+                            <div class="section">
+                                <h2>FUNERAL AND BURIAL WISHES</h2>
+                                <p><strong>Burial Preference:</strong> ${BURIAL_PREFS.find(b => b.value === willData.islamic.burial)?.label}</p>
+                                ${willData.islamic.burialLocation ? `<p><strong>Specific Location:</strong> ${willData.islamic.burialLocation}</p>` : ''}
+                                <p><strong>Shroud (Kafan):</strong> ${willData.islamic.shroud}</p>
+                                <p><strong>Timeline:</strong> ${willData.islamic.timeline}</p>
+                                <p><strong>Janazah Prayer:</strong> ${willData.islamic.janazah}</p>
+                                ${willData.islamic.notes ? `<p><strong>Additional Instructions:</strong> ${willData.islamic.notes}</p>` : ''}
+                                <p><em>I request that my burial be conducted in accordance with Islamic tradition, avoiding cremation and excessive expenditure.</em></p>
+                            </div>
+
+                            <div class="section">
+                                <h2>APPOINTMENT OF EXECUTORS</h2>
+                                <p>I appoint the following person(s) as Executor(s) and Trustee(s) of this Will:</p>
+                                ${willData.executors.map((e, i) => `
+                                    <div class="list-item">
+                                        <p><strong>Executor ${i + 1}:</strong> ${e.name}</p>
+                                        <p><strong>Relationship:</strong> ${e.relationship}</p>
+                                        <p><strong>Contact:</strong> ${e.contact}</p>
+                                    </div>
+                                `).join('')}
+                                ${willData.executors.length === 0 ? '<p><em>No executors appointed</em></p>' : ''}
+                            </div>
+
+                            ${willData.guardians.length > 0 ? `
+                            <div class="section">
+                                <h2>APPOINTMENT OF GUARDIANS</h2>
+                                <p>In the event of my death while my children are minors, I appoint the following as Guardian(s):</p>
+                                ${willData.guardians.map((g, i) => `
+                                    <div class="list-item">
+                                        <p><strong>Guardian ${i + 1}:</strong> ${g.name}</p>
+                                        <p><strong>Relationship:</strong> ${g.relationship}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ` : ''}
+
+                            ${willData.arbiters.length > 0 ? `
+                            <div class="section">
+                                <h2>APPOINTMENT OF ARBITERS (ISLAMIC SCHOLARS)</h2>
+                                <p>In the event of any dispute regarding the interpretation of Islamic law or the distribution of my estate according to Faraid, I appoint the following Islamic scholar(s) as Arbiter(s):</p>
+                                ${willData.arbiters.map((a, i) => `
+                                    <div class="list-item">
+                                        <p><strong>Arbiter ${i + 1}:</strong> ${a.name}</p>
+                                        <p><strong>Qualification:</strong> ${a.qualification}</p>
+                                        <p><strong>Institution:</strong> ${a.institution}</p>
+                                        <p><strong>Contact:</strong> ${a.contact}</p>
+                                    </div>
+                                `).join('')}
+                                <p><em>The decision of the appointed Arbiter(s) shall be final in matters of Islamic law and Faraid calculation.</em></p>
+                            </div>
+                            ` : ''}
+
+                            ${willData.wasiyyah.enabled ? `
+                            <div class="section">
+                                <h2>BEQUESTS (WASIYYAH)</h2>
+                                <p>In accordance with Islamic law, I make the following bequest(s) not exceeding one-third of my estate:</p>
+                                <p><strong>Amount/Percentage:</strong> ${willData.wasiyyah.amount}</p>
+                                <p><strong>Beneficiary:</strong> ${willData.wasiyyah.beneficiary}</p>
+                                <p><strong>Purpose:</strong> ${willData.wasiyyah.purpose}</p>
+                                <p><em>This bequest is subject to the consent of my Islamic inheritors as required by Shariah.</em></p>
+                            </div>
+                            ` : ''}
+
+                            ${willData.waqf.enabled ? `
+                            <div class="section">
+                                <h2>WAQF (CHARITABLE ENDOWMENT)</h2>
+                                <p>I establish the following Waqf as a perpetual charitable endowment:</p>
+                                <p><strong>Amount/Asset:</strong> ${willData.waqf.amount}</p>
+                                <p><strong>Purpose:</strong> ${willData.waqf.purpose}</p>
+                                <p><strong>Beneficiaries:</strong> ${willData.waqf.beneficiaries}</p>
+                                <p><em>This Waqf shall be administered in perpetuity for the stated purpose, with income distributed to the named beneficiaries.</em></p>
+                            </div>
+                            ` : ''}
+
+                            <div class="section">
+                                <h2>DISTRIBUTION OF RESIDUAL ESTATE</h2>
+                                <p>Subject to the payment of debts, funeral expenses, and any lawful bequests, I direct that the remainder of my estate be distributed among my lawful Islamic inheritors in accordance with the rules of Faraid as prescribed in the Quran and Sunnah, following the <strong>${MADHABS.find(m => m.value === settings.madhab)?.name} madhab</strong>.</p>
+                                <p><em>The exact distribution shall be calculated by my Executors in consultation with qualified Islamic scholars, taking into account all living heirs at the time of my death.</em></p>
+                            </div>
+
+                            <div class="page-break"></div>
+
+                            <div class="section">
+                                <h2>SIGNATURES AND WITNESSES</h2>
+                                
+                                <div class="sig-box">
+                                    <h3>TESTATOR</h3>
+                                    <p>I, <strong>${willData.personal.fullName}</strong>, declare this to be my Last Will and Testament, made freely and voluntarily.</p>
+                                    ${willData.signatures.testator ? `<img src="${willData.signatures.testator}" alt="Testator Signature" />` : '<div style="height: 80px;"></div>'}
+                                    <p>Signature: <span class="sig-line"></span></p>
+                                    <p>Date: <span class="sig-line">${today}</span></p>
+                                </div>
+
+                                <div class="sig-box">
+                                    <h3>WITNESS 1</h3>
+                                    <p><strong>Name:</strong> ${willData.signatures.witness1.name || '_________________________'}</p>
+                                    <p><strong>Address:</strong> ${willData.signatures.witness1.address || '_________________________'}</p>
+                                    ${willData.signatures.witness1.sig ? `<img src="${willData.signatures.witness1.sig}" alt="Witness 1 Signature" />` : '<div style="height: 80px;"></div>'}
+                                    <p>Signature: <span class="sig-line"></span></p>
+                                    <p>Date: <span class="sig-line">${today}</span></p>
+                                </div>
+
+                                <div class="sig-box">
+                                    <h3>WITNESS 2</h3>
+                                    <p><strong>Name:</strong> ${willData.signatures.witness2.name || '_________________________'}</p>
+                                    <p><strong>Address:</strong> ${willData.signatures.witness2.address || '_________________________'}</p>
+                                    ${willData.signatures.witness2.sig ? `<img src="${willData.signatures.witness2.sig}" alt="Witness 2 Signature" />` : '<div style="height: 80px;"></div>'}
+                                    <p>Signature: <span class="sig-line"></span></p>
+                                    <p>Date: <span class="sig-line">${today}</span></p>
+                                </div>
+                            </div>
+
+                            <div class="footer">
+                                <p>This Islamic Will was created using My Legacy - Islamic Estate Planner</p>
+                                <p>Document created on: ${today}</p>
+                                <p><em>This is a legal document. Keep it in a safe place and inform your executors of its location.</em></p>
+                            </div>
+                        </body>
+                        </html>
+                    `);
+                    w.document.close();
+                    setTimeout(() => w.print(), 500);
+                };
+                
+                return (
+                    <div style={{ minHeight: '100vh', background: theme.bg, padding: '1.5rem 1rem' }}>
+                        <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
+                            {selectedProfile && (
+                                <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1rem', marginBottom: '1rem', boxShadow: theme.shadow }}>
+                                    <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>Creating will for: <strong style={{ color: theme.text }}>{selectedProfile.name}</strong> ({RELATIONSHIPS.find(r => r.value === selectedProfile.relationship)?.label})</p>
+                                </div>
+                            )}
+                            <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto' }}>
+                                    {[1,2,3,4,5,6].map(s => (
+                                        <div key={s} style={{ flex: '0 0 auto', width: '3rem', height: '3rem', borderRadius: '50%', background: s === willStep ? theme.gradient : theme.border, color: s === willStep ? 'white' : theme.textSec, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, cursor: s < willStep ? 'pointer' : 'default' }} onClick={() => s < willStep && setWillStep(s)}>{s}</div>
+                                    ))}
+                                </div>
+                                
+                                {willStep === 1 && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Personal Details</h2>
+                                        <FormField label="Full Legal Name" value={willData.personal.fullName} onChange={e => setWillData(prev => ({...prev, personal: {...prev.personal, fullName: e.target.value}}))} required  t={_t}/>
+                                        <FormField label="Date of Birth" type="date" value={willData.personal.dob} onChange={e => setWillData(prev => ({...prev, personal: {...prev.personal, dob: e.target.value}}))} required  t={_t}/>
+                                        <FormField label="Full Address" value={willData.personal.address} onChange={e => setWillData(prev => ({...prev, personal: {...prev.personal, address: e.target.value}}))} required  t={_t}/>
+                                        <FormField label="Postcode" value={willData.personal.postcode} onChange={e => setWillData(prev => ({...prev, personal: {...prev.personal, postcode: e.target.value}}))} required  t={_t}/>
+                                        <FormField label="National ID / Passport Number" value={willData.personal.nationalId} onChange={e => setWillData(prev => ({...prev, personal: {...prev.personal, nationalId: e.target.value}}))} helpText="Optional but recommended for identification"  t={_t}/>
+                                        <FormField label="Marital Status" type="select" value={willData.personal.maritalStatus} onChange={e => setWillData(prev => ({...prev, personal: {...prev.personal, maritalStatus: e.target.value}}))} options={MARITAL_STATUS} required  t={_t}/>
+                                    </div>
+                                )}
+                                
+                                {willStep === 2 && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Islamic Declarations & Obligations</h2>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Declaration of Faith (Shahada)</h3>
+                                            <p style={{ color: theme.text, fontSize: '0.875rem', lineHeight: 1.6, fontStyle: 'italic' }}>{willData.islamic.shahada}</p>
+                                            <p style={{ color: theme.text, fontSize: '1rem', lineHeight: 1.6, marginTop: '0.5rem', direction: 'rtl' }}>أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ ٱللَّٰهِ</p>
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                            <p style={{ color: theme.text, fontSize: '0.875rem', lineHeight: 1.6 }}>I declare that I am of sound mind and make this will in accordance with Islamic law and Shariah principles. I request that my estate be distributed according to Faraid after settling debts and obligations, and up to one-third for wasiyyah if specified.</p>
+                                        </div>
+
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem' }}>Outstanding Islamic Obligations</h3>
+                                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1rem' }}>Select any outstanding obligations that should be fulfilled from your estate:</p>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                                                <input type="checkbox" checked={willData.islamic.obligations.hajj} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, hajj: e.target.checked}}}))} style={{ width: 'auto' }} />
+                                                <span style={{ color: theme.text, fontWeight: 600 }}>Outstanding Hajj</span>
+                                            </label>
+                                            {willData.islamic.obligations.hajj && <FormField label="Details" value={willData.islamic.obligations.hajjDetails} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, hajjDetails: e.target.value}}}))} placeholder="e.g., To be performed on my behalf by a trustworthy person"  t={_t}/>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                                                <input type="checkbox" checked={willData.islamic.obligations.zakah} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, zakah: e.target.checked}}}))} style={{ width: 'auto' }} />
+                                                <span style={{ color: theme.text, fontWeight: 600 }}>Outstanding Zakah</span>
+                                            </label>
+                                            {willData.islamic.obligations.zakah && <FormField label="Details" value={willData.islamic.obligations.zakahDetails} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, zakahDetails: e.target.value}}}))} placeholder="e.g., Calculate and pay from estate for past 2 years"  t={_t}/>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                                                <input type="checkbox" checked={willData.islamic.obligations.qard} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, qard: e.target.checked}}}))} style={{ width: 'auto' }} />
+                                                <span style={{ color: theme.text, fontWeight: 600 }}>Qard (Debts Owed)</span>
+                                            </label>
+                                            {willData.islamic.obligations.qard && <FormField label="Details" value={willData.islamic.obligations.qardDetails} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, qardDetails: e.target.value}}}))} placeholder="e.g., £5000 owed to [Name], to be repaid from estate"  t={_t}/>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
+                                                <input type="checkbox" checked={willData.islamic.obligations.kaffarah} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, kaffarah: e.target.checked}}}))} style={{ width: 'auto' }} />
+                                                <span style={{ color: theme.text, fontWeight: 600 }}>Kaffarah (Expiations)</span>
+                                            </label>
+                                            {willData.islamic.obligations.kaffarah && <FormField label="Details" value={willData.islamic.obligations.kaffarahDetails} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, kaffarahDetails: e.target.value}}}))} placeholder="e.g., Feed 60 poor people for broken oath"  t={_t}/>}
+                                        </div>
+
+                                        <FormField label="Other Obligations" type="textarea" value={willData.islamic.obligations.other} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, obligations: {...prev.islamic.obligations, other: e.target.value}}}))} placeholder="Any other Islamic obligations to be fulfilled from your estate"  t={_t}/>
+
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem', marginTop: '2rem' }}>Funeral & Burial Wishes</h3>
+                                        
+                                        <FormField label="Burial Preference" type="select" value={willData.islamic.burial} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, burial: e.target.value}}))} options={BURIAL_PREFS} required  t={_t}/>
+                                        
+                                        {willData.islamic.burial === 'specific' && <FormField label="Specific Burial Location" value={willData.islamic.burialLocation} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, burialLocation: e.target.value}}))} placeholder="Enter specific cemetery or location"  t={_t}/>}
+                                        
+                                        <FormField label="Additional Funeral Instructions" type="textarea" value={willData.islamic.notes} onChange={e => setWillData(prev => ({...prev, islamic: {...prev.islamic, notes: e.target.value}}))} placeholder="Any specific burial, funeral, or janazah instructions..."  t={_t}/>
+                                    </div>
+                                )}
+                                
+                                {willStep === 3 && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Executors, Guardians & Arbiters</h2>
+                                        
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem' }}>Executors</h3>
+                                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1rem' }}>Choose trustworthy individuals to manage your estate. Recommended: 2-4 executors.</p>
+                                        {willData.executors.map((ex, i) => (
+                                            <div key={i} style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                                <FormField label="Name" value={ex.name} onChange={e => { const val = e.target.value; setWillData(prev => { const newEx = prev.executors.map((x,idx) => idx===i ? {...x, name: val} : x); return {...prev, executors: newEx}; }); }}  t={_t}/>
+                                                <FormField label="Relationship" value={ex.relationship} onChange={e => { const val = e.target.value; setWillData(prev => { const newEx = prev.executors.map((x,idx) => idx===i ? {...x, relationship: val} : x); return {...prev, executors: newEx}; }); }}  t={_t}/>
+                                                <FormField label="Contact Details" value={ex.contact} onChange={e => { const val = e.target.value; setWillData(prev => { const newEx = prev.executors.map((x,idx) => idx===i ? {...x, contact: val} : x); return {...prev, executors: newEx}; }); }} placeholder="Phone and/or email"  t={_t}/>
+                                                <button onClick={() => setWillData(prev => ({...prev, executors: prev.executors.filter((_, idx) => idx !== i)}))} style={{ background: '#ff3b30', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>Remove</button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => setWillData(prev => ({...prev, executors: [...prev.executors, {name: '', relationship: '', contact: ''}]}))} style={{ background: theme.primary, color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, width: '100%', marginBottom: '2rem' }}>+ Add Executor</button>
+                                        
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem' }}>Guardians (for minor children)</h3>
+                                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1rem' }}>Only needed if you have children under 18. Skip if not applicable.</p>
+                                        {willData.guardians.map((g, i) => (
+                                            <div key={i} style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                                <FormField label="Name" value={g.name} onChange={e => { const val = e.target.value; setWillData(prev => { const newG = prev.guardians.map((x,idx) => idx===i ? {...x, name: val} : x); return {...prev, guardians: newG}; }); }}  t={_t}/>
+                                                <FormField label="Relationship" value={g.relationship} onChange={e => { const val = e.target.value; setWillData(prev => { const newG = prev.guardians.map((x,idx) => idx===i ? {...x, relationship: val} : x); return {...prev, guardians: newG}; }); }}  t={_t}/>
+                                                <button onClick={() => setWillData(prev => ({...prev, guardians: prev.guardians.filter((_, idx) => idx !== i)}))} style={{ background: '#ff3b30', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>Remove</button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => setWillData(prev => ({...prev, guardians: [...prev.guardians, {name: '', relationship: ''}]}))} style={{ background: theme.primary, color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, width: '100%', marginBottom: '2rem' }}>+ Add Guardian</button>
+                                        
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem' }}>Arbiters (Islamic Scholars)</h3>
+                                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1rem' }}>Appoint 1-2 Islamic scholars to resolve any disputes about Faraid distribution or Islamic law interpretation.</p>
+                                        {willData.arbiters.map((a, i) => (
+                                            <div key={i} style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                                <FormField label="Scholar Name" value={a.name} onChange={e => { const val = e.target.value; setWillData(prev => { const newA = prev.arbiters.map((x,idx) => idx===i ? {...x, name: val} : x); return {...prev, arbiters: newA}; }); }}  t={_t}/>
+                                                <FormField label="Qualification" value={a.qualification} onChange={e => { const val = e.target.value; setWillData(prev => { const newA = prev.arbiters.map((x,idx) => idx===i ? {...x, qualification: val} : x); return {...prev, arbiters: newA}; }); }} placeholder="e.g., Mufti, Alim, Sheikh"  t={_t}/>
+                                                <FormField label="Institution/Mosque" value={a.institution} onChange={e => { const val = e.target.value; setWillData(prev => { const newA = prev.arbiters.map((x,idx) => idx===i ? {...x, institution: val} : x); return {...prev, arbiters: newA}; }); }} placeholder="e.g., Al-Azhar, Local Islamic Center"  t={_t}/>
+                                                <FormField label="Contact Details" value={a.contact} onChange={e => { const val = e.target.value; setWillData(prev => { const newA = prev.arbiters.map((x,idx) => idx===i ? {...x, contact: val} : x); return {...prev, arbiters: newA}; }); }} placeholder="Phone and/or email"  t={_t}/>
+                                                <button onClick={() => setWillData(prev => ({...prev, arbiters: prev.arbiters.filter((_, idx) => idx !== i)}))} style={{ background: '#ff3b30', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>Remove</button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => setWillData(prev => ({...prev, arbiters: [...prev.arbiters, {name: '', qualification: '', institution: '', contact: ''}]}))} style={{ background: theme.primary, color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, width: '100%' }}>+ Add Arbiter</button>
+                                    </div>
+                                )}
+                                
+                                {willStep === 4 && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Wasiyyah & Waqf</h2>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                            <p style={{ color: theme.text, fontSize: '0.875rem', lineHeight: 1.6 }}>Islamic law permits bequests (wasiyyah) of up to one-third of your estate to non-heirs or charitable causes. You may also establish a Waqf (charitable endowment).</p>
+                                        </div>
+
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem' }}>Wasiyyah (Bequest)</h3>
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={willData.wasiyyah.enabled} onChange={e => setWillData(prev => ({...prev, wasiyyah: {...prev.wasiyyah, enabled: e.target.checked}}))} style={{ width: 'auto' }} />
+                                                <span style={{ color: theme.text, fontWeight: 600 }}>I want to make a wasiyyah bequest</span>
+                                            </label>
+                                        </div>
+                                        {willData.wasiyyah.enabled && (
+                                            <>
+                                                <FormField label="Amount or Percentage" value={willData.wasiyyah.amount} onChange={e => setWillData(prev => ({...prev, wasiyyah: {...prev.wasiyyah, amount: e.target.value}}))} placeholder="e.g., £5000 or 10% or one-third" helpText="Maximum: one-third of your estate"  t={_t}/>
+                                                <FormField label="Beneficiary" value={willData.wasiyyah.beneficiary} onChange={e => setWillData(prev => ({...prev, wasiyyah: {...prev.wasiyyah, beneficiary: e.target.value}}))} placeholder="Name of person or charity"  t={_t}/>
+                                                <FormField label="Purpose" type="textarea" value={willData.wasiyyah.purpose} onChange={e => setWillData(prev => ({...prev, wasiyyah: {...prev.wasiyyah, purpose: e.target.value}}))} placeholder="Purpose of this bequest..."  t={_t}/>
+                                            </>
+                                        )}
+
+                                        <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem', marginTop: '2rem' }}>Waqf (Charitable Endowment)</h3>
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={willData.waqf.enabled} onChange={e => setWillData(prev => ({...prev, waqf: {...prev.waqf, enabled: e.target.checked}}))} style={{ width: 'auto' }} />
+                                                <span style={{ color: theme.text, fontWeight: 600 }}>I want to establish a Waqf</span>
+                                            </label>
+                                        </div>
+                                        {willData.waqf.enabled && (
+                                            <>
+                                                <FormField label="Amount or Asset" value={willData.waqf.amount} onChange={e => setWillData(prev => ({...prev, waqf: {...prev.waqf, amount: e.target.value}}))} placeholder="e.g., £10,000 or property address" helpText="Assets held in perpetuity for charitable purposes"  t={_t}/>
+                                                <FormField label="Purpose" type="textarea" value={willData.waqf.purpose} onChange={e => setWillData(prev => ({...prev, waqf: {...prev.waqf, purpose: e.target.value}}))} placeholder="e.g., Support orphans, build mosque, fund Islamic education"  t={_t}/>
+                                                <FormField label="Beneficiaries" type="textarea" value={willData.waqf.beneficiaries} onChange={e => setWillData(prev => ({...prev, waqf: {...prev.waqf, beneficiaries: e.target.value}}))} placeholder="Who should benefit from the income generated by this Waqf"  t={_t}/>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {willStep === 5 && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Review Your Will</h2>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Personal Details</h3>
+                                            <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>{willData.personal.fullName}</p>
+                                            <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>DOB: {willData.personal.dob}</p>
+                                            <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>{willData.personal.address}</p>
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Islamic Obligations</h3>
+                                            {willData.islamic.obligations.hajj && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>✓ Outstanding Hajj</p>}
+                                            {willData.islamic.obligations.zakah && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>✓ Outstanding Zakah</p>}
+                                            {willData.islamic.obligations.qard && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>✓ Qard (Debts)</p>}
+                                            {willData.islamic.obligations.kaffarah && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>✓ Kaffarah</p>}
+                                            {!Object.values(willData.islamic.obligations).some(v => v) && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>None specified</p>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Executors ({willData.executors.length})</h3>
+                                            {willData.executors.map((e, i) => <p key={i} style={{ color: theme.textSec, fontSize: '0.875rem' }}>{e.name} ({e.relationship})</p>)}
+                                            {willData.executors.length === 0 && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>None appointed</p>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Guardians ({willData.guardians.length})</h3>
+                                            {willData.guardians.map((g, i) => <p key={i} style={{ color: theme.textSec, fontSize: '0.875rem' }}>{g.name} ({g.relationship})</p>)}
+                                            {willData.guardians.length === 0 && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>None appointed</p>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Arbiters ({willData.arbiters.length})</h3>
+                                            {willData.arbiters.map((a, i) => <p key={i} style={{ color: theme.textSec, fontSize: '0.875rem' }}>{a.name} ({a.qualification})</p>)}
+                                            {willData.arbiters.length === 0 && <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>None appointed</p>}
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Wasiyyah</h3>
+                                            <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>{willData.wasiyyah.enabled ? `${willData.wasiyyah.amount} to ${willData.wasiyyah.beneficiary}` : 'None specified'}</p>
+                                        </div>
+
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Waqf</h3>
+                                            <p style={{ color: theme.textSec, fontSize: '0.875rem' }}>{willData.waqf.enabled ? `${willData.waqf.amount} for ${willData.waqf.purpose}` : 'None established'}</p>
+                                        </div>
+
+                                        <div style={{ background: '#fef3c7', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid #fbbf24' }}>
+                                            <p style={{ color: '#92400e', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>⚠️ Important</p>
+                                            <p style={{ color: '#92400e', fontSize: '0.75rem', lineHeight: 1.6 }}>Please review carefully. Once signed, this will becomes a legal document. Consider consulting with a qualified Islamic scholar or legal advisor before finalizing.</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {willStep === 6 && !currentSig && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Signatures</h2>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Testator Signature</h3>
+                                            {willData.signatures.testator ? (
+                                                <><img src={willData.signatures.testator} style={{ maxWidth: '200px', maxHeight: '80px', border: `1px solid ${theme.border}`, borderRadius: '0.5rem', padding: '0.5rem' }} /><button onClick={() => setWillData(prev => ({...prev, signatures: {...prev.signatures, testator: null}}))} style={{ background: '#ff3b30', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', marginTop: '0.5rem' }}>Clear</button></>
+                                            ) : (
+                                                <button onClick={() => setCurrentSig('testator')} style={{ background: theme.primary, color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>Sign Here</button>
+                                            )}
+                                        </div>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>Witness 1</h3>
+                                            <FormField label="Name" value={willData.signatures.witness1.name} onChange={e => setWillData(prev => ({...prev, signatures: {...prev.signatures, witness1: {...prev.signatures.witness1, name: e.target.value}}}))}  t={_t}/>
+                                            <FormField label="Address" value={willData.signatures.witness1.address} onChange={e => setWillData(prev => ({...prev, signatures: {...prev.signatures, witness1: {...prev.signatures.witness1, address: e.target.value}}}))}  t={_t}/>
+                                            {willData.signatures.witness1.sig ? (
+                                                <><img src={willData.signatures.witness1.sig} style={{ maxWidth: '200px', maxHeight: '80px', border: `1px solid ${theme.border}`, borderRadius: '0.5rem', padding: '0.5rem' }} /><button onClick={() => setWillData(prev => ({...prev, signatures: {...prev.signatures, witness1: {...prev.signatures.witness1, sig: null}}}))} style={{ background: '#ff3b30', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', marginTop: '0.5rem' }}>Clear</button></>
+                                            ) : (
+                                                <button onClick={() => setCurrentSig('witness1')} style={{ background: theme.primary, color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>Sign Here</button>
+                                            )}
+                                        </div>
+                                        
+                                        <div style={{ background: theme.bg, padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                                            <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>Witness 2</h3>
+                                            <FormField label="Name" value={willData.signatures.witness2.name} onChange={e => setWillData(prev => ({...prev, signatures: {...prev.signatures, witness2: {...prev.signatures.witness2, name: e.target.value}}}))}  t={_t}/>
+                                            <FormField label="Address" value={willData.signatures.witness2.address} onChange={e => setWillData(prev => ({...prev, signatures: {...prev.signatures, witness2: {...prev.signatures.witness2, address: e.target.value}}}))}  t={_t}/>
+                                            {willData.signatures.witness2.sig ? (
+                                                <><img src={willData.signatures.witness2.sig} style={{ maxWidth: '200px', maxHeight: '80px', border: `1px solid ${theme.border}`, borderRadius: '0.5rem', padding: '0.5rem' }} /><button onClick={() => setWillData(prev => ({...prev, signatures: {...prev.signatures, witness2: {...prev.signatures.witness2, sig: null}}}))} style={{ background: '#ff3b30', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', marginTop: '0.5rem' }}>Clear</button></>
+                                            ) : (
+                                                <button onClick={() => setCurrentSig('witness2')} style={{ background: theme.primary, color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>Sign Here</button>
+                                            )}
+                                        </div>
+                                        
+                                        <button onClick={printWill} disabled={!willData.signatures.testator || !willData.signatures.witness1.sig || !willData.signatures.witness2.sig} style={{ background: willData.signatures.testator && willData.signatures.witness1.sig && willData.signatures.witness2.sig ? '#10b981' : theme.border, color: 'white', border: 'none', padding: '1rem 2rem', borderRadius: '0.5rem', cursor: willData.signatures.testator && willData.signatures.witness1.sig && willData.signatures.witness2.sig ? 'pointer' : 'not-allowed', fontSize: '1rem', fontWeight: 600, width: '100%' }}>🖨️ Print Complete Will</button>
+                                    </div>
+                                )}
+                                
+                                {currentSig && (
+                                    <div>
+                                        <h2 style={{ color: theme.text, marginBottom: '1.5rem' }}>Sign Below</h2>
+                                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1rem' }}>Use your mouse or finger to draw your signature</p>
+                                        <canvas 
+                                            ref={canvasRef}
+                                            width={560}
+                                            height={200}
+                                            onMouseDown={startDraw}
+                                            onMouseMove={draw}
+                                            onMouseUp={endDraw}
+                                            onMouseLeave={endDraw}
+                                            onTouchStart={startDraw}
+                                            onTouchMove={draw}
+                                            onTouchEnd={endDraw}
+                                            style={{ width: '100%', maxWidth: '560px', height: '200px', marginBottom: '1rem', display: 'block' }}
+                                        />
+                                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <button onClick={clearSig} style={{ flex: '1 1 auto', background: theme.border, color: theme.text, border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>Clear</button>
+                                            <button onClick={saveSig} style={{ flex: '1 1 auto', background: theme.primary, color: 'white', border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>Save Signature</button>
+                                            <button onClick={() => setCurrentSig(null)} style={{ flex: '1 1 auto', background: '#ff3b30', color: 'white', border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>Cancel</button>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {!currentSig && (
+                                    <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                                        {willStep > 1 && <button onClick={() => setWillStep(willStep - 1)} style={{ flex: 1, background: theme.border, color: theme.text, border: 'none', padding: '1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '1rem', fontWeight: 600 }}>← Previous</button>}
+                                        {willStep < 6 && <button onClick={() => setWillStep(willStep + 1)} style={{ flex: 1, background: theme.primary, color: 'white', border: 'none', padding: '1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '1rem', fontWeight: 600 }}>Next →</button>}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+        const calculateFaraid = (heirs, netEstate, madhab) => {
+            if (netEstate <= 0) return null;
+            const { spouseExists, spouseType, sons, daughters, fatherAlive, motherAlive, grandfatherAlive, grandmotherAlive, fullBrothers, fullSisters, paternalBrothers, paternalSisters } = heirs;
+            const hasChildren = sons > 0 || daughters > 0;
+            const hasSons = sons > 0;
+            const totalSiblings = fullBrothers + fullSisters + paternalBrothers + paternalSisters;
+            const shares = {};
+            let fixedSharesTotal = 0;
+
+            if (spouseExists) {
+                const spouseShare = spouseType === 'wife' ? (hasChildren ? 1/8 : 1/4) : (hasChildren ? 1/4 : 1/2);
+                shares.spouse = { fraction: spouseShare, label: spouseType === 'wife' ? 'Wife' : 'Husband', count: 1 };
+                fixedSharesTotal += spouseShare;
+            }
+            if (motherAlive) {
+                const motherShare = (hasChildren || totalSiblings >= 2) ? 1/6 : 1/3;
+                shares.mother = { fraction: motherShare, label: 'Mother', count: 1 };
+                fixedSharesTotal += motherShare;
+            }
+            if (fatherAlive) {
+                if (hasChildren) {
+                    shares.father = { fraction: 1/6, label: 'Father', count: 1, plusResidual: !hasSons };
+                    fixedSharesTotal += 1/6;
+                } else {
+                    shares.father = { fraction: 0, label: 'Father', count: 1, isAsabah: true };
+                }
+            }
+            if (grandfatherAlive && !fatherAlive) {
+                if (hasChildren) {
+                    shares.grandfather = { fraction: 1/6, label: 'Grandfather', count: 1 };
+                    fixedSharesTotal += 1/6;
+                } else {
+                    shares.grandfather = { fraction: 0, label: 'Grandfather', count: 1, isAsabah: true };
+                }
+            }
+            if (grandmotherAlive && !motherAlive) {
+                shares.grandmother = { fraction: 1/6, label: 'Grandmother', count: 1 };
+                fixedSharesTotal += 1/6;
+            }
+            if (daughters > 0 && !hasSons) {
+                const dShare = daughters === 1 ? 1/2 : 2/3;
+                shares.daughters = { fraction: dShare, label: daughters === 1 ? 'Daughter' : 'Daughters (' + daughters + ')', count: daughters };
+                fixedSharesTotal += dShare;
+            }
+            const siblingsActive = !hasChildren && !fatherAlive && !grandfatherAlive;
+            if (siblingsActive) {
+                const allBrothers = fullBrothers + paternalBrothers;
+                const allSisters = fullSisters + paternalSisters;
+                if (allBrothers === 0 && allSisters > 0) {
+                    const sisShare = allSisters === 1 ? 1/2 : 2/3;
+                    shares.sisters = { fraction: sisShare, label: allSisters === 1 ? 'Sister' : 'Sisters (' + allSisters + ')', count: allSisters };
+                    fixedSharesTotal += sisShare;
+                }
+            }
+
+            let residual = Math.max(0, netEstate * (1 - fixedSharesTotal));
+
+            if (hasSons) {
+                const totalUnits = sons * 2 + daughters;
+                shares.sons = { amount: residual * (sons * 2) / totalUnits, label: sons === 1 ? 'Son' : 'Sons (' + sons + ')', count: sons, isAsabah: true };
+                if (daughters > 0) {
+                    shares.daughters = { amount: residual * daughters / totalUnits, label: daughters === 1 ? 'Daughter' : 'Daughters (' + daughters + ')', count: daughters, isAsabah: true };
+                }
+                residual = 0;
+            } else if (fatherAlive && shares.father && !shares.father.isAsabah) {
+                shares.father.amount = (netEstate / 6) + residual;
+                residual = 0;
+            } else if (fatherAlive && shares.father && shares.father.isAsabah) {
+                shares.father.amount = residual;
+                residual = 0;
+            } else if (grandfatherAlive && !fatherAlive && shares.grandfather && shares.grandfather.isAsabah) {
+                shares.grandfather.amount = residual;
+                residual = 0;
+            } else if (siblingsActive) {
+                const allBrothers = fullBrothers + paternalBrothers;
+                const allSisters = fullSisters + paternalSisters;
+                if (allBrothers > 0) {
+                    const units = allBrothers * 2 + allSisters;
+                    shares.brothers = { amount: residual * (allBrothers * 2) / Math.max(units, 1), label: allBrothers === 1 ? 'Brother' : 'Brothers (' + allBrothers + ')', count: allBrothers, isAsabah: true };
+                    if (allSisters > 0) {
+                        shares.sisters = { amount: residual * allSisters / Math.max(units, 1), label: allSisters === 1 ? 'Sister' : 'Sisters (' + allSisters + ')', count: allSisters, isAsabah: true };
+                    }
+                    residual = 0;
+                }
+            }
+
+            const result = {};
+            for (const [key, s] of Object.entries(shares)) {
+                if (s.amount !== undefined) {
+                    result[key] = { ...s };
+                } else if (s.fraction !== undefined && !s.isAsabah) {
+                    result[key] = { ...s, amount: netEstate * s.fraction };
+                }
+            }
+
+            const distributed = Object.values(result).reduce((s, x) => s + (x.amount || 0), 0);
+            let unclaimed = netEstate - distributed;
+            if (unclaimed > 0.5) {
+                const raddEligible = Object.entries(result).filter(([k]) => k !== 'spouse');
+                const raddBase = raddEligible.reduce((s, [, v]) => s + (v.amount || 0), 0);
+                if (raddBase > 0) {
+                    for (const [key] of raddEligible) {
+                        result[key].amount += unclaimed * (result[key].amount / raddBase);
+                        result[key].raddApplied = true;
+                    }
+                    unclaimed = 0;
+                }
+            }
+            const finalDistributed = Object.values(result).reduce((s, x) => s + (x.amount || 0), 0);
+            return { shares: result, distributed: finalDistributed, unclaimed: Math.max(0, netEstate - finalDistributed - 0.01) };
+        };
+
+        function FaraidCalculator({ selectedProfile, theme, settings, calcData, saveCalcForProfile }) {
+                const { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } = window.Recharts || {};
+                const _RC = !!window.Recharts;
+            const _t = { text: theme.text, textSec: theme.textSec, surface: theme.surface, border: theme.border };
+
+                const [calcStep, setCalcStep] = useState(1);
+                const [assets, setAssets] = useState([]);
+                const [showAssetForm, setShowAssetForm] = useState(false);
+                const [newAsset, setNewAsset] = useState({ name: '', category: 'property', value: '' });
+                const [editAssetIdx, setEditAssetIdx] = useState(null);
+                const [debts, setDebts] = useState([]);
+                const [showDebtForm, setShowDebtForm] = useState(false);
+                const [newDebt, setNewDebt] = useState({ description: '', amount: '' });
+                const [funeralCost, setFuneralCost] = useState('');
+                const [wasiyyahAmount, setWasiyyahAmount] = useState('');
+                const [heirs, setHeirs] = useState({
+                    spouseExists: false, spouseType: 'wife',
+                    sons: 0, daughters: 0,
+                    fatherAlive: false, motherAlive: false,
+                    grandfatherAlive: false, grandmotherAlive: false,
+                    fullBrothers: 0, fullSisters: 0,
+                    paternalBrothers: 0, paternalSisters: 0
+                });
+                useEffect(() => {
+                    if (selectedProfile && calcData && calcData[selectedProfile.id]) {
+                        const sv = calcData[selectedProfile.id];
+                        if (sv.assets) setAssets(sv.assets);
+                        if (sv.debts) setDebts(sv.debts);
+                        if (sv.funeralCost !== undefined) setFuneralCost(String(sv.funeralCost));
+                        if (sv.wasiyyahAmount !== undefined) setWasiyyahAmount(String(sv.wasiyyahAmount));
+                        if (sv.heirs) setHeirs(sv.heirs);
+                    }
+                }, []);
+                useEffect(() => {
+                    if (selectedProfile && saveCalcForProfile) saveCalcForProfile(selectedProfile.id, { assets, debts, funeralCost, wasiyyahAmount, heirs });
+                }, [assets, debts, funeralCost, wasiyyahAmount, JSON.stringify(heirs)]);
+
+
+                const sym = CURRENCIES[settings.currency]?.symbol || '£';
+                const totalAssets = assets.reduce((s, a) => s + parseFloat(a.value || 0), 0);
+                const totalDebts = debts.reduce((s, d) => s + parseFloat(d.amount || 0), 0);
+                const funeral = parseFloat(funeralCost || 0);
+                const netEstate = Math.max(0, totalAssets - totalDebts - funeral);
+                const maxWasiyyah = netEstate / 3;
+                const wasiyyah = Math.min(parseFloat(wasiyyahAmount || 0), maxWasiyyah);
+                const distributionEstate = Math.max(0, netEstate - wasiyyah);
+                const results = calcStep === 4 ? calculateFaraid(heirs, distributionEstate, settings.madhab) : null;
+
+                const ASSET_CATS = ['Property', 'Cash & Bank', 'Investments', 'Business', 'Vehicle', 'Jewellery', 'Other'];
+                const CHART_COLORS = ['#0d9488','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316'];
+
+                const fmt = (n) => `${sym}${Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                const chartData = results ? Object.entries(results.shares).map(([k, s]) => ({
+                    name: s.label, value: parseFloat((s.amount || 0).toFixed(2))
+                })).filter(d => d.value > 0) : [];
+
+                const stepLabels = ['Assets', 'Debts & Wasiyyah', 'Heirs', 'Results'];
+
+                const sectionCard = (content, mb = '1rem') => (
+                    <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.25rem', marginBottom: mb, boxShadow: theme.shadow }}>
+                        {content}
+                    </div>
+                );
+
+                const counterRow = (label, key, min = 0) => (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: `1px solid ${theme.border}` }}>
+                        <span style={{ color: theme.text, fontSize: '0.9rem' }}>{label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <button onClick={() => setHeirs(prev => ({ ...prev, [key]: Math.max(min, prev[key] - 1) }))} style={{ width: '2rem', height: '2rem', borderRadius: '50%', border: `2px solid ${theme.border}`, background: theme.surface, color: theme.text, cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                            <span style={{ color: theme.text, fontWeight: 700, minWidth: '1.5rem', textAlign: 'center' }}>{heirs[key]}</span>
+                            <button onClick={() => setHeirs(prev => ({ ...prev, [key]: prev[key] + 1 }))} style={{ width: '2rem', height: '2rem', borderRadius: '50%', border: 'none', background: theme.primary, color: 'white', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                        </div>
+                    </div>
+                );
+
+                const toggleRow = (label, key, subtitle) => (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: `1px solid ${theme.border}` }}>
+                        <div>
+                            <span style={{ color: theme.text, fontSize: '0.9rem', display: 'block' }}>{label}</span>
+                            {subtitle && <span style={{ color: theme.textSec, fontSize: '0.75rem' }}>{subtitle}</span>}
+                        </div>
+                        <button onClick={() => setHeirs(prev => ({ ...prev, [key]: !prev[key] }))} style={{ width: '3rem', height: '1.5rem', borderRadius: '1rem', border: 'none', background: heirs[key] ? theme.primary : theme.border, cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+                            <div style={{ position: 'absolute', top: '0.15rem', left: heirs[key] ? '1.6rem' : '0.15rem', width: '1.2rem', height: '1.2rem', borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
+                        </button>
+                    </div>
+                );
+
+                // ── STEP 1: ASSETS ──
+                const AssetsStep = () => (
+                    <div>
+                        <h2 style={{ color: theme.text, marginBottom: '0.5rem' }}>Estate Assets</h2>
+                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1.5rem' }}>List all assets owned by the deceased at time of death.</p>
+
+                        {assets.map((a, i) => (
+                            <div key={i} style={{ background: theme.surface, borderRadius: '0.75rem', padding: '1rem', marginBottom: '0.75rem', boxShadow: theme.shadow, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <p style={{ color: theme.text, fontWeight: 600, margin: 0, fontSize: '0.9rem' }}>{a.name}</p>
+                                    <p style={{ color: theme.textSec, fontSize: '0.75rem', margin: 0 }}>{a.category}</p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <span style={{ color: theme.primary, fontWeight: 700 }}>{fmt(a.value)}</span>
+                                    <button onClick={() => { setNewAsset(a); setEditAssetIdx(i); setShowAssetForm(true); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textSec, fontSize: '1rem' }}>✏️</button>
+                                    <button onClick={() => setAssets(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem' }}>🗑️</button>
+                                </div>
+                            </div>
+                        ))}
+
+                        {showAssetForm ? (
+                            <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.25rem', marginBottom: '1rem', boxShadow: theme.shadow }}>
+                                <h3 style={{ color: theme.text, fontSize: '1rem', marginBottom: '1rem' }}>{editAssetIdx !== null ? 'Edit Asset' : 'Add Asset'}</h3>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ color: theme.text }}>Asset Name</label>
+                                    <input value={newAsset.name} onChange={e => setNewAsset(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Family Home, Savings Account" style={{ background: theme.surface, color: theme.text, borderColor: theme.border }} />
+                                </div>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ color: theme.text }}>Category</label>
+                                    <select value={newAsset.category} onChange={e => setNewAsset(prev => ({ ...prev, category: e.target.value }))} style={{ background: theme.surface, color: theme.text, borderColor: theme.border }}>
+                                        {ASSET_CATS.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                <div style={{ marginBottom: '1.25rem' }}>
+                                    <label style={{ color: theme.text }}>Value ({sym})</label>
+                                    <input type="number" value={newAsset.value} onChange={e => setNewAsset(prev => ({ ...prev, value: e.target.value }))} placeholder="0.00" min="0" style={{ background: theme.surface, color: theme.text, borderColor: theme.border }} />
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                    <button onClick={() => {
+                                        if (!newAsset.name || !newAsset.value) return;
+                                        if (editAssetIdx !== null) {
+                                            setAssets(prev => prev.map((a, i) => i === editAssetIdx ? newAsset : a));
+                                            setEditAssetIdx(null);
+                                        } else {
+                                            setAssets(prev => [...prev, newAsset]);
+                                        }
+                                        setNewAsset({ name: '', category: 'property', value: '' });
+                                        setShowAssetForm(false);
+                                    }} style={{ flex: 1, background: theme.primary, color: 'white', border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>Save</button>
+                                    <button onClick={() => { setShowAssetForm(false); setEditAssetIdx(null); setNewAsset({ name: '', category: 'property', value: '' }); }} style={{ flex: 1, background: theme.border, color: theme.text, border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button onClick={() => setShowAssetForm(true)} style={{ width: '100%', background: theme.primary, color: 'white', border: 'none', padding: '0.875rem', borderRadius: '0.75rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>+ Add Asset</button>
+                        )}
+
+                        {assets.length > 0 && (
+                            <div style={{ background: `linear-gradient(135deg, ${theme.primary}15 0%, ${theme.primary}05 100%)`, border: `1px solid ${theme.primary}40`, borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                                <p style={{ color: theme.textSec, fontSize: '0.75rem', margin: '0 0 0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Gross Estate</p>
+                                <p style={{ color: theme.primary, fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>{fmt(totalAssets)}</p>
+                            </div>
+                        )}
+                    </div>
+                );
+
+                // ── STEP 2: DEBTS & WASIYYAH ──
+                const DebtsStep = () => (
+                    <div>
+                        <h2 style={{ color: theme.text, marginBottom: '0.5rem' }}>Debts & Deductions</h2>
+                        <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1.5rem' }}>Deducted before distribution. Order: Funeral → Debts → Wasiyyah (max ⅓).</p>
+
+                        {sectionCard(<>
+                            <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>🕌 Funeral Expenses</h3>
+                            <div>
+                                <label style={{ color: theme.text }}>Estimated Cost ({sym})</label>
+                                <input type="number" value={funeralCost} onChange={e => setFuneralCost(e.target.value)} placeholder="0.00" min="0" style={{ background: theme.surface, color: theme.text, borderColor: theme.border }} />
+                            </div>
+                        </>)}
+
+                        {sectionCard(<>
+                            <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>💳 Debts & Liabilities</h3>
+                            {debts.map((d, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: `1px solid ${theme.border}` }}>
+                                    <span style={{ color: theme.text, fontSize: '0.875rem' }}>{d.description}</span>
+                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                        <span style={{ color: '#ef4444', fontWeight: 600 }}>−{fmt(d.amount)}</span>
+                                        <button onClick={() => setDebts(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>✕</button>
+                                    </div>
+                                </div>
+                            ))}
+                            {showDebtForm ? (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <div style={{ marginBottom: '0.75rem' }}>
+                                        <label style={{ color: theme.text }}>Description</label>
+                                        <input value={newDebt.description} onChange={e => setNewDebt(prev => ({ ...prev, description: e.target.value }))} placeholder="e.g. Mortgage, Loan, Credit card" style={{ background: theme.surface, color: theme.text, borderColor: theme.border }} />
+                                    </div>
+                                    <div style={{ marginBottom: '0.75rem' }}>
+                                        <label style={{ color: theme.text }}>Amount ({sym})</label>
+                                        <input type="number" value={newDebt.amount} onChange={e => setNewDebt(prev => ({ ...prev, amount: e.target.value }))} placeholder="0.00" min="0" style={{ background: theme.surface, color: theme.text, borderColor: theme.border }} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button onClick={() => { if (!newDebt.description || !newDebt.amount) return; setDebts(prev => [...prev, newDebt]); setNewDebt({ description: '', amount: '' }); setShowDebtForm(false); }} style={{ flex: 1, background: theme.primary, color: 'white', border: 'none', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>Add</button>
+                                        <button onClick={() => setShowDebtForm(false)} style={{ flex: 1, background: theme.border, color: theme.text, border: 'none', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button onClick={() => setShowDebtForm(true)} style={{ marginTop: '0.75rem', background: 'none', border: `1px dashed ${theme.border}`, width: '100%', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', color: theme.textSec, fontSize: '0.875rem' }}>+ Add Debt</button>
+                            )}
+                        </>)}
+
+                        {sectionCard(<>
+                            <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.5rem' }}>📜 Wasiyyah (Bequest)</h3>
+                            <p style={{ color: theme.textSec, fontSize: '0.75rem', marginBottom: '0.75rem' }}>Maximum ⅓ of net estate after debts and funeral. Max: {fmt(maxWasiyyah)}</p>
+                            <div>
+                                <label style={{ color: theme.text }}>Bequest Amount ({sym})</label>
+                                <input type="number" value={wasiyyahAmount} onChange={e => setWasiyyahAmount(e.target.value)} placeholder="0.00" min="0" max={maxWasiyyah} style={{ background: theme.surface, color: theme.text, borderColor: theme.border }} />
+                            </div>
+                            {parseFloat(wasiyyahAmount) > maxWasiyyah && (
+                                <p style={{ color: '#f59e0b', fontSize: '0.75rem', marginTop: '0.5rem' }}>⚠️ Exceeds ⅓ limit. Will be capped at {fmt(maxWasiyyah)}.</p>
+                            )}
+                        </>)}
+
+                        <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.25rem', boxShadow: theme.shadow }}>
+                            <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>Estate Summary</h3>
+                            {[
+                                { label: 'Gross Estate', value: totalAssets, color: theme.primary },
+                                { label: '− Funeral Costs', value: -funeral, color: '#ef4444' },
+                                { label: '− Total Debts', value: -totalDebts, color: '#ef4444' },
+                                { label: '= Net Estate', value: netEstate, color: theme.text, bold: true },
+                                { label: '− Wasiyyah', value: -wasiyyah, color: '#f59e0b' },
+                                { label: '= For Distribution', value: distributionEstate, color: '#10b981', bold: true },
+                            ].map((row, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: i < 5 ? `1px solid ${theme.border}` : 'none' }}>
+                                    <span style={{ color: theme.textSec, fontSize: '0.875rem', fontWeight: row.bold ? 700 : 400 }}>{row.label}</span>
+                                    <span style={{ color: row.color, fontWeight: row.bold ? 700 : 600, fontSize: row.bold ? '1rem' : '0.875rem' }}>{fmt(Math.abs(row.value))}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+
+                // ── STEP 3: HEIRS ──
+                const HeirsStep = () => {
+                    const hasChildren = heirs.sons > 0 || heirs.daughters > 0;
+                    const sibsBlocked = hasChildren || heirs.fatherAlive || heirs.grandfatherAlive;
+                    const madhab = MADHABS.find(m => m.value === settings.madhab);
+
+                    return (
+                        <div>
+                            <h2 style={{ color: theme.text, marginBottom: '0.5rem' }}>Heirs (Waratha)</h2>
+                            <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '0.5rem' }}>Select all living heirs at time of death. Madhab: <strong style={{ color: theme.primary }}>{madhab?.name}</strong></p>
+
+                            {sectionCard(<>
+                                <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>💍 Spouse</h3>
+                                {toggleRow('Has surviving spouse', 'spouseExists')}
+                                {heirs.spouseExists && (
+                                    <div style={{ paddingTop: '0.75rem', display: 'flex', gap: '0.75rem' }}>
+                                        {['wife', 'husband'].map(t => (
+                                            <button key={t} onClick={() => setHeirs(prev => ({ ...prev, spouseType: t }))} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: `2px solid ${heirs.spouseType === t ? theme.primary : theme.border}`, background: heirs.spouseType === t ? `${theme.primary}15` : theme.surface, color: heirs.spouseType === t ? theme.primary : theme.textSec, cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', textTransform: 'capitalize' }}>{t}</button>
+                                        ))}
+                                    </div>
+                                )}
+                            </>)}
+
+                            {sectionCard(<>
+                                <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>👶 Children</h3>
+                                {counterRow('Sons', 'sons')}
+                                {counterRow('Daughters', 'daughters')}
+                            </>)}
+
+                            {sectionCard(<>
+                                <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>👨‍👩‍👦 Parents</h3>
+                                {toggleRow('Father is alive', 'fatherAlive')}
+                                {toggleRow('Mother is alive', 'motherAlive')}
+                            </>)}
+
+                            {sectionCard(<>
+                                <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>👴 Grandparents</h3>
+                                <p style={{ color: theme.textSec, fontSize: '0.75rem', marginBottom: '0.5rem' }}>Only relevant when parents are not alive.</p>
+                                {toggleRow('Paternal grandfather', 'grandfatherAlive', heirs.fatherAlive ? 'Excluded (father alive)' : '')}
+                                {toggleRow('Maternal grandmother', 'grandmotherAlive', heirs.motherAlive ? 'Excluded (mother alive)' : '')}
+                            </>)}
+
+                            {sectionCard(<>
+                                <h3 style={{ color: theme.text, fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>👥 Siblings</h3>
+                                {sibsBlocked && (
+                                    <div style={{ background: '#fef3c715', border: '1px solid #fbbf2440', borderRadius: '0.5rem', padding: '0.6rem', marginBottom: '0.75rem' }}>
+                                        <p style={{ color: '#92400e', fontSize: '0.75rem', margin: 0 }}>⚠️ Siblings are excluded when {hasChildren ? 'children' : heirs.fatherAlive ? 'father' : 'grandfather'} are alive.</p>
+                                    </div>
+                                )}
+                                <div style={{ opacity: sibsBlocked ? 0.4 : 1, pointerEvents: sibsBlocked ? 'none' : 'auto' }}>
+                                    {counterRow('Full brothers', 'fullBrothers')}
+                                    {counterRow('Full sisters', 'fullSisters')}
+                                    {counterRow('Paternal half-brothers', 'paternalBrothers')}
+                                    {counterRow('Paternal half-sisters', 'paternalSisters')}
+                                </div>
+                            </>)}
+                        </div>
+                    );
+                };
+
+                // ── STEP 4: RESULTS ──
+                const ResultsStep = () => {
+                    if (!results) return (
+                        <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                            <p style={{ color: theme.textSec, fontSize: '1rem' }}>Please add assets and at least one heir to calculate distribution.</p>
+                        </div>
+                    );
+
+                    const totalDistributed = Object.values(results.shares).reduce((s, h) => s + (h.amount || 0), 0);
+
+                    return (
+                        <div>
+                            <h2 style={{ color: theme.text, marginBottom: '0.5rem' }}>Faraid Distribution</h2>
+                            <p style={{ color: theme.textSec, fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+                                Based on {MADHABS.find(m => m.value === settings.madhab)?.name} madhab. Estate for distribution: <strong style={{ color: theme.primary }}>{fmt(distributionEstate)}</strong>
+                            </p>
+
+                            {/* Summary cards */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                                {[
+                                    { label: 'Gross Estate', value: totalAssets, icon: '🏦' },
+                                    { label: 'Deductions', value: totalDebts + funeral + wasiyyah, icon: '📉' },
+                                    { label: 'For Distribution', value: distributionEstate, icon: '⚖️' },
+                                    { label: 'Distributed', value: totalDistributed, icon: '✅' },
+                                ].map((c, i) => (
+                                    <div key={i} style={{ background: theme.surface, borderRadius: '0.75rem', padding: '1rem', boxShadow: theme.shadow, textAlign: 'center' }}>
+                                        <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{c.icon}</div>
+                                        <p style={{ color: theme.primary, fontWeight: 700, fontSize: '1rem', margin: '0 0 0.25rem' }}>{fmt(c.value)}</p>
+                                        <p style={{ color: theme.textSec, fontSize: '0.7rem', margin: 0 }}>{c.label}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Pie Chart */}
+                            {chartData.length > 0 && _RC && (
+                                <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.25rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                                    <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>Distribution Breakdown</h3>
+                                    <ResponsiveContainer width="100%" height={220}>
+                                        <PieChart>
+                                            <Pie data={chartData} cx="50%" cy="50%" outerRadius={85} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
+                                                {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                                            </Pie>
+                                            <Tooltip formatter={(val) => fmt(val)} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+
+                            {/* Bar Chart */}
+                            {chartData.length > 0 && _RC && (
+                                <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.25rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                                    <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>Share Amounts</h3>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.textSec }} />
+                                            <YAxis tick={{ fontSize: 10, fill: theme.textSec }} tickFormatter={v => `${sym}${(v/1000).toFixed(0)}k`} />
+                                            <Tooltip formatter={(val) => [fmt(val), 'Amount']} />
+                                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                                {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+
+                            {/* Detailed table */}
+                            <div style={{ background: theme.surface, borderRadius: '1rem', overflow: 'hidden', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                                <div style={{ padding: '1rem 1.25rem', borderBottom: `1px solid ${theme.border}` }}>
+                                    <h3 style={{ color: theme.text, fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>Heir Details</h3>
+                                </div>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ background: theme.bg }}>
+                                                {['Heir', 'Basis', 'Share', 'Amount', 'Per Person'].map(h => (
+                                                    <th key={h} style={{ padding: '0.6rem 1rem', color: theme.textSec, fontSize: '0.75rem', textAlign: 'left', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(results.shares).map(([key, s], i) => {
+                                                const amt = s.amount || 0;
+                                                const pct = distributionEstate > 0 ? (amt / distributionEstate * 100).toFixed(1) : 0;
+                                                const perPerson = s.count > 0 ? amt / s.count : amt;
+                                                const basis = s.isAsabah ? 'Asabah (Residual)' : s.fraction ? `Fard (${s.fraction < 1 ? ['', '½', '⅓', '¼', '⅙', '⅛'][Math.round(1/s.fraction)] || (s.fraction*100).toFixed(0)+'%' : s.fraction*100+'%'})` : '—';
+                                                return (
+                                                    <tr key={key} style={{ borderTop: `1px solid ${theme.border}`, background: i % 2 === 0 ? theme.surface : theme.bg }}>
+                                                        <td style={{ padding: '0.75rem 1rem', color: theme.text, fontWeight: 600, fontSize: '0.875rem' }}>{s.label}</td>
+                                                        <td style={{ padding: '0.75rem 1rem', color: theme.textSec, fontSize: '0.8rem' }}>{basis}</td>
+                                                        <td style={{ padding: '0.75rem 1rem', color: theme.primary, fontWeight: 700, fontSize: '0.875rem' }}>{pct}%</td>
+                                                        <td style={{ padding: '0.75rem 1rem', color: theme.text, fontWeight: 600, fontSize: '0.875rem' }}>{fmt(amt)}</td>
+                                                        <td style={{ padding: '0.75rem 1rem', color: theme.textSec, fontSize: '0.8rem' }}>{s.count > 1 ? fmt(perPerson) : '—'}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style={{ background: `${theme.primary}10`, borderTop: `2px solid ${theme.primary}40` }}>
+                                                <td colSpan={3} style={{ padding: '0.75rem 1rem', color: theme.text, fontWeight: 700, fontSize: '0.875rem' }}>Total Distributed</td>
+                                                <td colSpan={2} style={{ padding: '0.75rem 1rem', color: theme.primary, fontWeight: 700, fontSize: '0.9rem' }}>{fmt(totalDistributed)}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Unclaimed notice */}
+                            {results.unclaimed > 1 && (
+                                <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
+                                    <p style={{ color: '#92400e', fontWeight: 600, margin: '0 0 0.25rem' }}>⚠️ Undistributed: {fmt(results.unclaimed)}</p>
+                                    <p style={{ color: '#92400e', fontSize: '0.8rem', margin: 0 }}>Returned to estate. Consult a qualified Islamic scholar for ruling on radd (return).</p>
+                                </div>
+                            )}
+
+                            {/* Islamic disclaimer */}
+                            <div style={{ background: `${theme.primary}10`, border: `1px solid ${theme.primary}30`, borderRadius: '0.75rem', padding: '1rem' }}>
+                                <p style={{ color: theme.primary, fontWeight: 600, margin: '0 0 0.25rem', fontSize: '0.875rem' }}>📚 Scholarly Disclaimer</p>
+                                <p style={{ color: theme.textSec, fontSize: '0.75rem', margin: 0, lineHeight: 1.6 }}>This calculator provides a general Faraid estimate based on classical Sunni Fiqh. Individual cases may differ due to circumstances such as non-Muslim heirs, adopted children, or contested estates. Always consult a qualified Islamic scholar (Mufti) and a solicitor for your specific situation.</p>
+                            </div>
+                            <button onClick={() => {
+                                const pName = selectedProfile ? selectedProfile.name : 'Estate';
+                                const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                                const madhName = MADHABS.find(m => m.value === settings.madhab) ? MADHABS.find(m => m.value === settings.madhab).name : '';
+                                const shareRows = Object.entries(results.shares).map(function(entry) {
+                                    const s = entry[1]; const amt = s.amount || 0;
+                                    const pct = distributionEstate > 0 ? (amt/distributionEstate*100).toFixed(1) : '0';
+                                    const pp = s.count > 1 ? fmt(amt/s.count) : '-';
+                                    return '<tr><td>' + s.label + '</td><td>' + (s.isAsabah ? 'Asabah' : 'Fard') + '</td><td>' + pct + '%</td><td>' + fmt(amt) + '</td><td>' + pp + '</td></tr>';
+                                }).join('');
+                                const totalDist = fmt(Object.values(results.shares).reduce(function(a,x){ return a+(x.amount||0); }, 0));
+                                const w = window.open('', '_blank');
+                                if (!w) { alert('Please allow popups for this site to print reports.'); return; }
+                                const html = ['<!DOCTYPE html><html><head><title>Faraid Report</title>',
+                                    '<meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:800px;margin:0 auto;padding:2rem}h1,h2{color:#0d9488}table{width:100%;border-collapse:collapse;margin-bottom:1.5rem}th{background:#0d9488;color:#fff;padding:.5rem .75rem;text-align:left}td{padding:.5rem .75rem;border-bottom:1px solid #e5e5ea}.tot td{font-weight:700;background:#f0fdf4}.disc{background:#f0fdf4;padding:1rem;border-radius:.5rem;font-size:.85rem;margin-top:1rem}.foot{text-align:center;font-size:.75rem;color:#86868b;margin-top:2rem}@media print{button{display:none}}</style></head><body>',
+                                    '<h1>Faraid Report — ' + pName + '</h1><p>' + madhName + ' madhab &bull; ' + today + '</p>',
+                                    '<h2>Estate Breakdown</h2><table><tr><td>Gross Estate</td><td>' + fmt(totalAssets) + '</td></tr><tr><td>- Funeral</td><td>' + fmt(funeral) + '</td></tr><tr><td>- Debts</td><td>' + fmt(totalDebts) + '</td></tr><tr><td>- Wasiyyah</td><td>' + fmt(wasiyyah) + '</td></tr><tr><td><strong>For Distribution</strong></td><td><strong>' + fmt(distributionEstate) + '</strong></td></tr></table>',
+                                    '<h2>Heir Distribution</h2><table><thead><tr><th>Heir</th><th>Basis</th><th>%</th><th>Amount</th><th>Per Person</th></tr></thead><tbody>' + shareRows + '</tbody><tr class="tot"><td colspan="3">Total</td><td>' + totalDist + '</td><td></td></tr></table>',
+                                    '<div class="disc">Faraid estimate (' + madhName + ' school). Consult a qualified Mufti and solicitor.</div>',
+                                    '<div class="foot">My Legacy Islamic Estate Planner &bull; ' + today + '</div></body></html>'
+                                ].join('');
+                                w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); }, 600);
+                            }} style={{ width: '100%', background: theme.gradient, color: 'white', border: 'none', padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+                                🖨️ Print / Save PDF Report
+                            </button>
+                        </div>
+                    );
+                };
+
+                return (
+                    <div style={{ minHeight: '100vh', background: theme.bg, padding: '1.5rem 1rem' }}>
+                        <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
+                            {selectedProfile && (
+                                <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1rem', marginBottom: '1rem', boxShadow: theme.shadow }}>
+                                    <p style={{ color: theme.textSec, fontSize: '0.875rem', margin: 0 }}>Calculating for: <strong style={{ color: theme.text }}>{selectedProfile.name}</strong> ({RELATIONSHIPS.find(r => r.value === selectedProfile.relationship)?.label})</p>
+                                </div>
+                            )}
+
+                            {/* Step indicator */}
+                            <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1rem 1.25rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                                <div style={{ display: 'flex', gap: '0', justifyContent: 'space-between', position: 'relative' }}>
+                                    <div style={{ position: 'absolute', top: '1rem', left: '12%', right: '12%', height: '2px', background: theme.border, zIndex: 0 }} />
+                                    {stepLabels.map((label, i) => {
+                                        const step = i + 1;
+                                        const done = step < calcStep;
+                                        const active = step === calcStep;
+                                        return (
+                                            <div key={i} onClick={() => setCalcStep(step)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', zIndex: 1, flex: 1 }}>
+                                                <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: done ? '#10b981' : active ? theme.primary : theme.border, color: (done || active) ? 'white' : theme.textSec, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                                                    {done ? '✓' : step}
+                                                </div>
+                                                <span style={{ fontSize: '0.65rem', color: active ? theme.primary : theme.textSec, fontWeight: active ? 700 : 400, textAlign: 'center' }}>{label}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Step content */}
+                            <div style={{ background: theme.surface, borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                                {calcStep === 1 && AssetsStep()}
+                                {calcStep === 2 && DebtsStep()}
+                                {calcStep === 3 && HeirsStep()}
+                                {calcStep === 4 && ResultsStep()}
+                            </div>
+
+                            {/* Navigation */}
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                {calcStep > 1 && (
+                                    <button onClick={() => setCalcStep(s => s - 1)} style={{ flex: 1, background: theme.border, color: theme.text, border: 'none', padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer', fontSize: '1rem', fontWeight: 600 }}>← Back</button>
+                                )}
+                                {calcStep < 4 && (
+                                    <button onClick={() => setCalcStep(s => s + 1)} style={{ flex: 1, background: theme.gradient, color: 'white', border: 'none', padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer', fontSize: '1rem', fontWeight: 600 }}>
+                                        {calcStep === 3 ? '⚖️ Calculate' : 'Next →'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+        function MyLegacy({ cryptoKey, initialData, onNewKey }) {
+            const [currentView, setCurrentView] = useState('home');
+            const [darkMode, setDarkMode] = useState(false);
+            const [profiles, setProfiles] = useState([]);
+            const [selectedProfile, setSelectedProfile] = useState(null);
+            const [showAddProfile, setShowAddProfile] = useState(false);
+            const [newProfile, setNewProfile] = useState({ name: '', relationship: 'self', dob: '' });
+            const [settings, setSettings] = useState({ madhab: 'hanafi', currency: 'GBP', jurisdiction: 'england-wales' });
+            const DEFAULT_WILL = {
+                personal: { fullName: '', dob: '', address: '', postcode: '', nationalId: '', maritalStatus: '' },
+                islamic: { shariaCompliance: true, shahada: 'I bear witness that there is no god but Allah, and Muhammad is the Messenger of Allah.', burial: 'muslim-cemetery', burialLocation: '', shroud: 'Simple white cloth (Kafan)', timeline: 'As soon as possible after death', janazah: 'According to Sunnah', notes: '', obligations: { hajj: false, hajjDetails: '', zakah: false, zakahDetails: '', qard: false, qardDetails: '', kaffarah: false, kaffarahDetails: '', other: '' } },
+                executors: [], guardians: [], arbiters: [],
+                wasiyyah: { enabled: false, amount: '', beneficiary: '', purpose: '' },
+                waqf: { enabled: false, amount: '', purpose: '', beneficiaries: '' },
+                signatures: { testator: null, witness1: { sig: null, name: '', address: '' }, witness2: { sig: null, name: '', address: '' } }
+            };
+            const [willsData, setWillsData] = useState({});
+            const [willData, setWillData]   = useState(DEFAULT_WILL);
+            const [willStep, setWillStep] = useState(1);
+            const [editingProfileId, setEditingProfileId] = useState(null);
+            const [editProfileData, setEditProfileData] = useState({ name: '', relationship: 'self', dob: '' });
+            const [calcData, setCalcData]   = useState({});
+            // Change password state
+            const [cpCurrent, setCpCurrent] = useState('');
+            const [cpNew, setCpNew]         = useState('');
+            const [cpConfirm, setCpConfirm] = useState('');
+            const [cpMsg, setCpMsg]         = useState('');
+            const [cpBusy, setCpBusy]       = useState(false);
+            const [cpDone, setCpDone]       = useState(false);
+            const importRef = useRef(null);
+            
+            const theme = {
+                primary: darkMode ? '#14b8a6' : '#0d9488',
+                gradient: darkMode ? 'linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%)' : 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+                bg: darkMode ? '#000000' : '#f5f5f7',
+                surface: darkMode ? '#1c1c1e' : '#ffffff',
+                text: darkMode ? '#f5f5f7' : '#1d1d1f',
+                textSec: darkMode ? '#98989d' : '#86868b',
+                border: darkMode ? '#38383a' : '#e5e5ea',
+                shadow: darkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)'
+            };
+            const _t = { text: theme.text, textSec: theme.textSec, surface: theme.surface, border: theme.border };
+            
+            // Initialise state from decrypted data provided by PinGate
+            useEffect(() => {
+                if (!initialData) return;
+                try {
+                    if (initialData.profiles) setProfiles(initialData.profiles);
+                    if (initialData.settings) setSettings(s => ({ ...s, ...initialData.settings }));
+                    if (typeof initialData.darkMode === 'boolean') setDarkMode(initialData.darkMode);
+                    if (initialData.willsData) setWillsData(initialData.willsData);
+                    if (initialData.calcData)  setCalcData(initialData.calcData);
+                } catch(e) { console.error('Init error:', e); }
+            }, []);
+            
+            // Encrypted save — runs whenever data changes
+            useEffect(() => {
+                if (!cryptoKey) return;
+                (async () => {
+                    try { await saveEncrypted(cryptoKey, { profiles, settings, darkMode, willsData, calcData }); }
+                    catch(e) { console.error('Save error:', e); }
+                })();
+            }, [profiles, settings, darkMode, willsData, calcData]);
+            
+            const addProfile = () => {
+                if (!newProfile.name) { alert('Please enter a name'); return; }
+                setProfiles([...profiles, { ...newProfile, id: Date.now() }]);
+                setNewProfile({ name: '', relationship: 'self', dob: '' });
+                setShowAddProfile(false);
+            };
+            
+            const startWillFor = (profile) => {
+                setSelectedProfile(profile);
+                setWillData(willsData[profile.id] || { ...DEFAULT_WILL, personal: { ...DEFAULT_WILL.personal, fullName: profile.name } });
+                setWillStep(1);
+                setCurrentView('will');
+            };
+            
+            const startCalcFor = (profile) => {
+                setSelectedProfile(profile);
+                setCurrentView('calculator');
+            };
+
+            // Per-profile will save
+            const saveWillForProfile = (pid, data) => setWillsData(prev => ({ ...prev, [pid]: data }));
+            const saveCalcForProfile = (pid, d)    => setCalcData(prev => ({ ...prev, [pid]: d }));
+
+            const updateProfile = () => {
+                if (!editProfileData.name) return;
+                setProfiles(prev => prev.map(p => p.id === editingProfileId ? { ...p, ...editProfileData } : p));
+                setEditingProfileId(null);
+            };
+
+            // Change password
+            const changePassword = async () => {
+                if (cpNew.length < 4) return setCpMsg('New password must be at least 4 characters');
+                if (cpNew !== cpConfirm) return setCpMsg('New passwords do not match');
+                setCpBusy(true); setCpMsg('');
+                try {
+                    const salt = b642buf(localStorage.getItem(ML_SALT_KEY));
+                    const oldKey = await deriveCryptoKey(cpCurrent, salt);
+                    const enc = JSON.parse(localStorage.getItem(ML_DATA_KEY));
+                    await decryptBlob(oldKey, enc); // verify current password
+                    const newSalt = crypto.getRandomValues(new Uint8Array(16));
+                    localStorage.setItem(ML_SALT_KEY, buf2b64(newSalt.buffer));
+                    const newKey = await deriveCryptoKey(cpNew, newSalt);
+                    await saveEncrypted(newKey, { profiles, settings, darkMode, willsData, calcData });
+                    onNewKey(newKey);
+                    setCpCurrent(''); setCpNew(''); setCpConfirm('');
+                    setCpDone(true); setCpBusy(false);
+                    setTimeout(() => setCpDone(false), 3000);
+                } catch(e) { setCpMsg('Current password is incorrect.'); setCpBusy(false); }
+            };
+
+            // Export encrypted backup
+            const exportData = () => {
+                const salt = localStorage.getItem(ML_SALT_KEY);
+                const enc  = localStorage.getItem(ML_DATA_KEY);
+                if (!salt || !enc) return alert('No data to export.');
+                const blob = new Blob([JSON.stringify({ salt, enc: JSON.parse(enc) })], { type: 'application/json' });
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href = url;
+                a.download = 'mylegacy_backup_' + new Date().toISOString().split('T')[0] + '.json';
+                a.click(); URL.revokeObjectURL(url);
+            };
+
+            // Import encrypted backup
+            const importData = (file) => {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        const { salt, enc } = JSON.parse(e.target.result);
+                        localStorage.setItem(ML_SALT_KEY, salt);
+                        localStorage.setItem(ML_DATA_KEY, JSON.stringify(enc));
+                        localStorage.setItem(ML_READY_KEY, '1');
+                        alert('Backup imported successfully!\n\nThe app will reload. Use the password from the source device to log in.');
+                        window.location.reload();
+                    } catch(e) { alert('Invalid backup file. Please use a .json file exported from My Legacy.'); }
+                };
+                reader.readAsText(file);
+            };
+
+            
+            const Header = () => (
+                <div style={{ background: theme.surface, borderBottom: `1px solid ${theme.border}`, padding: '1rem' }}>
+                    <div style={{ maxWidth: '42rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            {currentView !== 'home' && <button onClick={() => setCurrentView('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: theme.text, padding: '0.5rem' }}>←</button>}
+                            <div><h1 style={{ color: theme.text, fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>My Legacy</h1><p style={{ color: theme.textSec, fontSize: '0.75rem', margin: '0.25rem 0 0 0' }}>Islamic Estate Planner</p></div>
+                        </div>
+                        <button onClick={() => setDarkMode(!darkMode)} style={{ background: theme.surface, border: `1px solid ${theme.border}`, width: '2.5rem', height: '2.5rem', borderRadius: '50%', cursor: 'pointer', fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{darkMode ? '☀️' : '🌙'}</button>
+                    </div>
+                </div>
+            );
+            
+
+            const HomePage = () => (
+                <div style={{ minHeight: '100vh', background: theme.bg }}>
+                    <div style={{ maxWidth: '42rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
+                        <div style={{ background: theme.gradient, borderRadius: '1.5rem', padding: '2rem', color: 'white', marginBottom: '1.5rem', boxShadow: theme.shadow }}>
+                            <img src={LOGO_PATH} alt="My Legacy" style={{ width: '4rem', height: '4rem', marginBottom: '1rem', borderRadius: '0.75rem' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0 0 0.5rem 0' }}>Plan Your Islamic Estate</h2>
+                            <p style={{ fontSize: '0.875rem', opacity: 0.9, margin: 0 }}>Create Shariah-compliant wills and calculate inheritance distribution</p>
+                        </div>
+                        
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}` }}><p style={{ color: theme.textSec, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>SETTINGS</p></div>
+                            <button onClick={() => setCurrentView('settings')} style={{ background: theme.surface, border: 'none', width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)', width: '2.75rem', height: '2.75rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>⚙️</div>
+                                    <div style={{ textAlign: 'left' }}><p style={{ color: theme.text, fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>Preferences</p><p style={{ color: theme.textSec, fontSize: '0.75rem', margin: 0 }}>{CURRENCIES[settings.currency].flag} {settings.currency} • {MADHABS.find(m => m.value === settings.madhab)?.name}</p></div>
+                                </div>
+                                <span style={{ color: theme.textSec }}>›</span>
+                            </button>
+                        </div>
+                        
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <p style={{ color: theme.textSec, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>FAMILY PROFILES</p>
+                                <button onClick={() => setShowAddProfile(true)} style={{ color: theme.primary, background: 'none', border: 'none', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', padding: '0.25rem 0.5rem' }}>Add</button>
+                            </div>
+                            
+                            {showAddProfile && (
+                                <div style={{ background: theme.bg, padding: '1rem', borderBottom: `1px solid ${theme.border}` }}>
+                                    <FormField label="Name" value={newProfile.name} onChange={e => setNewProfile(prev => ({...prev, name: e.target.value}))} placeholder="Enter name" required />
+                                    <FormField label="Relationship" type="select" value={newProfile.relationship} onChange={e => setNewProfile(prev => ({...prev, relationship: e.target.value}))} options={RELATIONSHIPS} />
+                                    <FormField label="Date of Birth (Optional)" type="date" value={newProfile.dob} onChange={e => setNewProfile(prev => ({...prev, dob: e.target.value}))} />
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button onClick={addProfile} style={{ flex: 1, background: theme.primary, color: 'white', border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>Save</button>
+                                        <button onClick={() => {setShowAddProfile(false); setNewProfile({ name: '', relationship: 'self', dob: '' });}} style={{ flex: 1, background: theme.border, color: theme.text, border: 'none', padding: '0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {profiles.length === 0 && !showAddProfile && (
+                                <div style={{ padding: '3rem 1rem', textAlign: 'center' }}><div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👥</div><p style={{ color: theme.text, fontWeight: 600, marginBottom: '0.5rem' }}>No Profiles Yet</p><p style={{ color: theme.textSec, fontSize: '0.875rem' }}>Tap Add to create a profile</p></div>
+                            )}
+                            
+                            {profiles.map((p, idx) => (
+                                <div key={p.id} style={{ background: theme.surface, borderTop: idx > 0 || showAddProfile ? `1px solid ${theme.border}` : 'none', padding: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                        <div style={{ background: theme.gradient, width: '2.75rem', height: '2.75rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.875rem' }}>{p.name.charAt(0).toUpperCase()}</div>
+                                        <div style={{ flex: 1, textAlign: 'left' }}>
+                                            <p style={{ color: theme.text, fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>{p.name}</p>
+                                            <p style={{ color: theme.textSec, fontSize: '0.75rem', margin: 0 }}>{RELATIONSHIPS.find(r => r.value === p.relationship)?.label}{p.dob ? ` • ${p.dob}` : ''}</p>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                            <button onClick={() => { setEditingProfileId(p.id); setEditProfileData({ name: p.name, relationship: p.relationship, dob: p.dob || '' }); }} style={{ color: theme.primary, background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', fontSize: '1.1rem' }} title='Edit'>✏️</button>
+                                            <button onClick={() => confirm('Delete ' + p.name + '?') && setProfiles(profiles.filter(x => x.id !== p.id))} style={{ color: theme.textSec, background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', fontSize: '1.25rem' }}>🗑️</button>
+                                        </div>
+                                    </div>
+                                    {editingProfileId === p.id && (
+                                        <div style={{ background: theme.bg, borderRadius: '0.75rem', padding: '1rem', marginBottom: '0.75rem', border: '2px solid ' + theme.primary + '40' }}>
+                                            <p style={{ color: theme.primary, fontWeight: 700, fontSize: '0.875rem', margin: '0 0 0.75rem' }}>Edit Profile</p>
+                                            <div style={{ marginBottom: '0.75rem' }}><label style={{ color: theme.text, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Name</label><input value={editProfileData.name} onChange={e => setEditProfileData(prev => ({...prev, name: e.target.value}))} style={{ background: theme.surface, color: theme.text, border: '1px solid ' + theme.border, width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box' }} /></div>
+                                            <div style={{ marginBottom: '0.75rem' }}><label style={{ color: theme.text, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Relationship</label><select value={editProfileData.relationship} onChange={e => setEditProfileData(prev => ({...prev, relationship: e.target.value}))} style={{ background: theme.surface, color: theme.text, border: '1px solid ' + theme.border, width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>{RELATIONSHIPS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}</select></div>
+                                            <div style={{ marginBottom: '1rem' }}><label style={{ color: theme.text, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Date of Birth</label><input type='date' value={editProfileData.dob} onChange={e => setEditProfileData(prev => ({...prev, dob: e.target.value}))} style={{ background: theme.surface, color: theme.text, border: '1px solid ' + theme.border, width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box' }} /></div>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}><button onClick={updateProfile} style={{ flex: 1, background: theme.primary, color: 'white', border: 'none', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>Save</button><button onClick={() => setEditingProfileId(null)} style={{ flex: 1, background: theme.border, color: theme.text, border: 'none', padding: '0.6rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>Cancel</button></div>
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                                        <button onClick={() => startWillFor(p)} style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)', color: 'white', border: 'none', padding: '0.75rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                            {willsData && willsData[p.id] && willsData[p.id].personal && willsData[p.id].personal.fullName ? '✏️ Edit Will' : '📝 Create Will'}
+                                        </button>
+                                        <button onClick={() => startCalcFor(p)} style={{ background: 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)', color: 'white', border: 'none', padding: '0.75rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                            {calcData && calcData[p.id] && calcData[p.id].assets && calcData[p.id].assets.length > 0 ? '✏️ Edit Estate' : '🧮 Calculate'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div style={{ textAlign: 'center', padding: '1rem 0' }}><p style={{ color: theme.textSec, fontSize: '0.75rem' }}>© 2026 My Legacy • Shariah-compliant estate planning</p></div>
+                    </div>
+                </div>
+            );
+            
+            const SettingsPage = () => (
+                <div style={{ minHeight: '100vh', background: theme.bg }}>
+                    <div style={{ maxWidth: '42rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}` }}><p style={{ color: theme.textSec, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>CURRENCY</p></div>
+                            {Object.entries(CURRENCIES).map(([code, details], idx) => (
+                                <button key={code} onClick={() => details.enabled && setSettings(prev => ({...prev, currency: code}))} disabled={!details.enabled} style={{ background: theme.surface, border: 'none', borderTop: idx > 0 ? `1px solid ${theme.border}` : 'none', width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: details.enabled ? 'pointer' : 'not-allowed', opacity: details.enabled ? 1 : 0.5 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}><span style={{ fontSize: '1.5rem' }}>{details.flag}</span><div style={{ textAlign: 'left' }}><p style={{ color: theme.text, fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>{details.name}</p><p style={{ color: theme.textSec, fontSize: '0.75rem', margin: 0 }}>{code}</p></div></div>
+                                    {settings.currency === code && <span style={{ color: theme.primary, fontSize: '1.25rem' }}>✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', marginBottom: '1.5rem', overflow: 'hidden' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}` }}><p style={{ color: theme.textSec, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>MADHAB</p></div>
+                            {MADHABS.map((m, idx) => (
+                                <button key={m.value} onClick={() => setSettings(prev => ({...prev, madhab: m.value}))} style={{ background: theme.surface, border: 'none', borderTop: idx > 0 ? `1px solid ${theme.border}` : 'none', width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                                    <div style={{ textAlign: 'left' }}><p style={{ color: theme.text, fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>{m.name}</p><p style={{ color: theme.textSec, fontSize: '0.75rem', margin: 0 }}>{m.description}</p></div>
+                                    {settings.madhab === m.value && <span style={{ color: theme.primary, fontSize: '1.25rem' }}>✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', overflow: 'hidden' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}` }}><p style={{ color: theme.textSec, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>JURISDICTION</p></div>
+                            {JURISDICTIONS.map((j, idx) => (
+                                <button key={j.value} onClick={() => j.enabled && setSettings(prev => ({...prev, jurisdiction: j.value}))} disabled={!j.enabled} style={{ background: theme.surface, border: 'none', borderTop: idx > 0 ? `1px solid ${theme.border}` : 'none', width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: j.enabled ? 'pointer' : 'not-allowed', opacity: j.enabled ? 1 : 0.5 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}><span style={{ fontSize: '1.5rem' }}>{j.country}</span><p style={{ color: theme.text, fontWeight: 600, fontSize: '0.875rem', margin: 0, textAlign: 'left' }}>{j.name}</p></div>
+                                    {settings.jurisdiction === j.value && <span style={{ color: theme.primary, fontSize: '1.25rem' }}>✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                        {/* ── Security ── */}
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', overflow: 'hidden', marginBottom: '1rem' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span>🔐</span>
+                                <h3 style={{ color: theme.text, fontWeight: 700, fontSize: '0.9rem', margin: 0 }}>Security — Change Password</h3>
+                            </div>
+                            <div style={{ padding: '1rem' }}>
+                                {cpDone && <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '0.5rem', padding: '0.6rem 0.875rem', marginBottom: '0.875rem' }}><p style={{ color: '#166534', fontSize: '0.875rem', margin: 0 }}>✅ Password changed successfully!</p></div>}
+                                <div style={{ marginBottom: '0.75rem' }}><label style={{ color: theme.text, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem', fontWeight: 600 }}>Current Password</label><input type='password' value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} placeholder='Enter current password' style={{ background: theme.bg, color: theme.text, border: `1px solid ${theme.border}`, width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box' }} /></div>
+                                <div style={{ marginBottom: '0.75rem' }}><label style={{ color: theme.text, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem', fontWeight: 600 }}>New Password</label><input type='password' value={cpNew} onChange={e => setCpNew(e.target.value)} placeholder='Minimum 4 characters' style={{ background: theme.bg, color: theme.text, border: `1px solid ${theme.border}`, width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box' }} /></div>
+                                <div style={{ marginBottom: '0.875rem' }}><label style={{ color: theme.text, fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem', fontWeight: 600 }}>Confirm New Password</label><input type='password' value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} placeholder='Repeat new password' style={{ background: theme.bg, color: theme.text, border: `1px solid ${theme.border}`, width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box' }} /></div>
+                                {cpMsg && <p style={{ color: '#dc2626', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{cpMsg}</p>}
+                                <button onClick={changePassword} disabled={cpBusy} style={{ background: cpBusy ? theme.border : theme.primary, color: 'white', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '0.5rem', cursor: cpBusy ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
+                                    {cpBusy ? '⏳ Changing…' : '🔐 Change Password'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* ── Data Management ── */}
+                        <div style={{ background: theme.surface, boxShadow: theme.shadow, borderRadius: '1rem', overflow: 'hidden', marginBottom: '1rem' }}>
+                            <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${theme.border}`, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span>💾</span>
+                                <h3 style={{ color: theme.text, fontWeight: 700, fontSize: '0.9rem', margin: 0 }}>Data Management</h3>
+                            </div>
+                            <div style={{ padding: '1rem' }}>
+                                <p style={{ color: theme.textSec, fontSize: '0.8rem', marginBottom: '1rem', lineHeight: 1.5 }}>
+                                    Export your encrypted backup to transfer to another device. Import restores data — you will need the original password.
+                                </p>
+                                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                    <button onClick={exportData} style={{ flex: 1, minWidth: '130px', background: theme.primary, color: 'white', border: 'none', padding: '0.7rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
+                                        ⬇️ Export Backup
+                                    </button>
+                                    <button onClick={() => importRef.current && importRef.current.click()} style={{ flex: 1, minWidth: '130px', background: theme.surface, color: theme.primary, border: `2px solid ${theme.primary}`, padding: '0.7rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
+                                        ⬆️ Import Backup
+                                    </button>
+                                    <input ref={importRef} type='file' accept='.json' style={{ display: 'none' }} onChange={e => importData(e.target.files[0])} />
+                                </div>
+                                <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '0.5rem', padding: '0.75rem', marginTop: '0.875rem', fontSize: '0.78rem', color: '#92400e', lineHeight: 1.5 }}>
+                                    ⚠️ Exported files are AES-256 encrypted. You need your password to access them on another device.
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            );
+            
+            // ─────────────────────────────────────────────────────────────
+            // PHASE 3: FARAID INHERITANCE CALCULATOR
+            // ─────────────────────────────────────────────────────────────
+
+            // Faraid calculation engine (classical Sunni Fiqh)
+
+            return (
+                <div style={{ minHeight: '100vh', background: theme.bg }}>
+                    {Header()}
+                    {currentView === 'home' && HomePage()}
+                    {currentView === 'settings' && SettingsPage()}
+                    {currentView === 'will' && (
+                        <WillCreator
+                            willData={willData} setWillData={setWillData}
+                            willStep={willStep} setWillStep={setWillStep}
+                            selectedProfile={selectedProfile} theme={theme}
+                            settings={settings}
+                            saveWillForProfile={saveWillForProfile}
+                        />
+                    )}
+                    {currentView === 'calculator' && (
+                        <FaraidCalculator
+                            selectedProfile={selectedProfile} theme={theme}
+                            settings={settings} calcData={calcData}
+                            saveCalcForProfile={saveCalcForProfile}
+                        />
+                    )}
+                </div>
+            );
+        }
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        console.log('✅ My Legacy Phase 3 - Faraid Calculator loaded!');
+    </script>
+</body>
+</html>
